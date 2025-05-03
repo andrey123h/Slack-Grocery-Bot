@@ -1,2 +1,2 @@
-# Slack-Grocery-Bot
-## in progess 
+# Slack Grocery Bot
+## In progress
