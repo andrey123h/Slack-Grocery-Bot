@@ -18,9 +18,11 @@ import java.util.List;
 @RequestMapping("/slack/events")
 public class SlackEventsController {
     private final SlackMessageService slackMessageService;
+    private final EventStore eventStore;
 
-    public SlackEventsController(SlackMessageService slackMessageService) {
+    public SlackEventsController(SlackMessageService slackMessageService, EventStore eventStore) {
         this.slackMessageService = slackMessageService;
+        this.eventStore = eventStore;
     }
 
     @Value("${slack.signing.secret}")
@@ -28,9 +30,6 @@ public class SlackEventsController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // In-memory stores for tests
-    private final List<MessageEvent> messages = new ArrayList<>();
-    private final List<ReactionEvent> reactions = new ArrayList<>();
 
     @PostMapping(produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> receive(
@@ -38,7 +37,8 @@ public class SlackEventsController {
             @RequestHeader("X-Slack-Request-Timestamp") String timestamp,
             @RequestBody String rawBody
     ) throws Exception {
-        // 1) Verify signature
+        // Verify the Slack signature.HMAC-SHA256 check ensures that the request really came from Slack
+
         String base = "v0:" + timestamp + ":" + rawBody;
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(signingSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
@@ -47,16 +47,16 @@ public class SlackEventsController {
             return ResponseEntity.status(401).body("Invalid signature");
         }
 
-        // 2) Parse JSON
+        // Parse the JSON payload
         JsonNode payload = objectMapper.readTree(rawBody);
         String type = payload.get("type").asText();
 
-        // 3) URL verification handshake
+        //  URL verification handshake
         if ("url_verification".equals(type)) {
             return ResponseEntity.ok(payload.get("challenge").asText());
         }
 
-        // 4) Event callbacks
+        //  Event callbacks
         if ("event_callback".equals(type)) {
             JsonNode event = payload.get("event");
             // Ignore any bot-generated events
@@ -75,41 +75,44 @@ public class SlackEventsController {
             }
         }
 
-        // 5) Acknowledge
+        //  Acknowledge
         return ResponseEntity.ok("");
     }
 
     private void handleMessageEvent(JsonNode event) {
+        // pulling fields out of the JSON
         String user = event.get("user").asText();
         String channel = event.get("channel").asText();
         String text = event.get("text").asText();
         String ts = event.get("ts").asText();
 
-        messages.add(new MessageEvent(user, channel, text, ts));
-        System.out.printf("Recorded message: %s%n", messages.get(messages.size() - 1));
+        MessageEvent me = new MessageEvent(user, channel, text, ts);
+        eventStore.saveMessage(me);
+        System.out.printf("Recorded message: %s%n", me);
     }
 
     private void handleReactionAdded(JsonNode event) {
+        // pulling fields out of the JSON
         String reaction = event.get("reaction").asText();
         String user = event.get("user").asText();
         JsonNode item = event.get("item");
         String channel = item.get("channel").asText();
         String messageTs = item.get("ts").asText();
 
-        reactions.add(new ReactionEvent(user, reaction, channel, messageTs));
-        System.out.printf("Recorded reaction: %s%n", reactions.get(reactions.size() - 1));
+        ReactionEvent re = new ReactionEvent(user, reaction, channel, messageTs);
+        eventStore.saveReaction(re);
+        System.out.printf("Recorded reaction: %s%n", re);
     }
 
     @GetMapping("/messages")
     public List<MessageEvent> getMessages() {
-        return List.copyOf(messages);
+        return eventStore.fetchMessagesSince("0"); // “0” means “from the beginning”
     }
 
     @GetMapping("/reactions")
     public List<ReactionEvent> getReactions() {
-        return List.copyOf(reactions);
+        return eventStore.fetchReactionsSince("0");
     }
 
-    public static record MessageEvent(String user, String channel, String text, String ts) {}
-    public static record ReactionEvent(String user, String reaction, String channel, String ts) {}
+
 }
