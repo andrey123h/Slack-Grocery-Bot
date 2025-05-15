@@ -23,7 +23,7 @@ public class InMemoryEventStore implements EventStore {
      */
     @Override
     public List<MessageEvent> fetchMessagesSince(String fromTs) {
-        double cutoff = Double.parseDouble(fromTs); // fromTs — a Slack‐style timestamp string.
+        double cutoff = Double.parseDouble(fromTs); // Converts the Slack timestamp to a number
         return messages.stream()
                 .filter(e -> Double.parseDouble(e.ts()) >= cutoff)
                 .collect(Collectors.toList());
