@@ -39,15 +39,23 @@ public class WeeklyOrderScheduler {
 
 
     /**
-     * Opens a new grocery order thread every Monday at 09:00 Jerusalem time
+     * Opens a new grocery order thread every Monday at 09:00 Jerusalem time,
+     * posts the opening prompt with ordering instructions, and pins the message for visibility.
      */
     @Scheduled(cron = "0 0 9 * * MON", zone = "Asia/Jerusalem")
     public void openOrderThread() throws Exception {
-        String prompt = "*🛒 New Grocery Order Thread!* Please add your items by Thursday EOD.";
+        // Compose prompt with instructions directly
+        String prompt = "*🛒 New Grocery Order Thread!* Please add your items by Thursday EOD.\n"
+                + "Use `@Office Grocery Bot <quantity> <item>, ...` format to place orders. \n"
+                + " note: both single and multiple items in one massage are supported.\n"
+                + " default quantity = 1.";
+
         ChatPostMessageResponse resp = slackMessageService.sendMessage(orderChannel, prompt);
         if (resp.isOk()) {
             currentThreadTs = resp.getTs();
             System.out.println("Opened thread at ts=" + currentThreadTs);
+            // Pin the prompt message so it remains visible
+            slackMessageService.pinMessage(orderChannel, currentThreadTs);
         } else {
             System.err.println("Failed to open thread: " + resp.getError());
         }
@@ -58,6 +66,7 @@ public class WeeklyOrderScheduler {
     /**
      * Closes and summarizes the thread every Thursday at 17:00 Jerusalem time
      */
+
     @Scheduled(cron = "0 0 17 * * THU", zone = "Asia/Jerusalem")
     public void closeOrderThread() throws Exception {
         if (currentThreadTs == null) {
