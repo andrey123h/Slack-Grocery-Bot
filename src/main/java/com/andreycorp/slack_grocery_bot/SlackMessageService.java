@@ -1,18 +1,18 @@
 package com.andreycorp.slack_grocery_bot;
 
 import com.slack.api.Slack;
+import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
+import com.slack.api.methods.response.conversations.ConversationsOpenResponse;
 import com.slack.api.methods.response.pins.PinsAddResponse;
+import com.slack.api.methods.response.users.UsersInfoResponse;
+import com.slack.api.model.User; // isAdmin() isOwner()
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-
-/**
- * Service class for interacting with Slack's messaging API.
- * Provides methods to send and pin messages with comprehensive error handling.
- */
+import java.util.List;
 
 @Service
 public class SlackMessageService {
@@ -21,18 +21,23 @@ public class SlackMessageService {
     private String botToken;
 
     /**
+     * Helper to get a MethodsClient instance.
+     * Creates and returns an instance of MethodsClient, which is used to interact with Slack's API.
+     * The client is initialized with the bot token to authenticate API requests.
+     * @return MethodsClient instance configured with the bot token.
+     */
+
+    private MethodsClient client() {
+        return Slack.getInstance().methods(botToken);
+    }
+
+    /**
      * Sends a message to a specified Slack channel.
-     *
-     * @param channelId The ID of the Slack channel.
-     * @param text      The text of the message.
-     * @return A ChatPostMessageResponse containing the Slack API response.
-     * @throws IOException on network errors or Slack API errors.
      */
     public ChatPostMessageResponse sendMessage(String channelId, String text)
             throws IOException {
         try {
-            Slack slack = Slack.getInstance();
-            ChatPostMessageResponse response = slack.methods(botToken)
+            ChatPostMessageResponse response = client()
                     .chatPostMessage(req -> req
                             .channel(channelId)
                             .text(text)
@@ -48,18 +53,11 @@ public class SlackMessageService {
 
     /**
      * Sends a message to a specified Slack channel as a reply in a thread.
-     *
-     * @param channelId The ID of the Slack channel.
-     * @param text      The text of the message.
-     * @param threadTs  The timestamp of the thread to post into.
-     * @return A ChatPostMessageResponse containing the Slack API response.
-     * @throws IOException on network errors or Slack API errors.
      */
     public ChatPostMessageResponse sendMessage(String channelId, String text, String threadTs)
             throws IOException {
         try {
-            Slack slack = Slack.getInstance();
-            ChatPostMessageResponse response = slack.methods(botToken)
+            ChatPostMessageResponse response = client()
                     .chatPostMessage(req -> req
                             .channel(channelId)
                             .text(text)
@@ -76,16 +74,11 @@ public class SlackMessageService {
 
     /**
      * Pins a message in the specified Slack channel, identified by its timestamp.
-     *
-     * @param channelId The ID of the Slack channel.
-     * @param messageTs The timestamp of the message to pin.
-     * @throws IOException on network errors or Slack API errors.
      */
     public void pinMessage(String channelId, String messageTs)
             throws IOException {
         try {
-            Slack slack = Slack.getInstance();
-            PinsAddResponse response = slack.methods(botToken)
+            PinsAddResponse response = client()
                     .pinsAdd(req -> req
                             .channel(channelId)
                             .timestamp(messageTs)
@@ -95,6 +88,45 @@ public class SlackMessageService {
             }
         } catch (SlackApiException e) {
             throw new IOException("Failed to pin Slack message", e);
+        }
+    }
+
+    /**
+     * Opens  a 1:1 DM channel with the given user ID.
+     */
+
+    public String openImChannel(String userId) throws IOException {
+        try {
+            ConversationsOpenResponse resp = client()
+                    .conversationsOpen(r -> r.users(List.of(userId)));
+            if (!resp.isOk()) {
+                throw new IOException("conversations.open error: " + resp.getError());
+            }
+            return resp.getChannel().getId();
+        } catch (SlackApiException e) {
+            throw new IOException("Failed to open IM channel", e);
+        }
+    }
+
+    /**
+     * Returns true if the user is a workspace admin or owner.
+     */
+
+    public boolean isWorkspaceAdmin(String userId) throws IOException {
+        try {
+            // returns metadata about a Slack user, to determine whether they’re an admin
+            UsersInfoResponse resp = client()
+                    .usersInfo(r -> r.user(userId));
+            //  Checking resp.isOk() and resp.getUser():
+            // catches cases where Slack responded with "ok": false
+            // guards against an unexpected SDK bug or empty payload
+            if (!resp.isOk() || resp.getUser() == null) {
+                throw new IOException("users.info error: " + resp.getError());
+            }
+            User u = resp.getUser();
+            return Boolean.TRUE.equals(u.isAdmin()) || Boolean.TRUE.equals(u.isOwner());
+        } catch (SlackApiException e) {
+            throw new IOException("Failed to call users.info", e);
         }
     }
 }
