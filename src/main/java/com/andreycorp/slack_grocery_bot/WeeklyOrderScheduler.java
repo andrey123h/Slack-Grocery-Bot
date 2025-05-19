@@ -48,6 +48,7 @@ public class WeeklyOrderScheduler {
         String prompt = "*🛒 New Grocery Order Thread!* Please add your items by Thursday EOD.\n"
                 + "Use `@Office Grocery Bot <quantity> <item>, ...` format to place orders. \n"
                 + " note: both single and multiple items in one massage are supported.\n"
+                + " hit thumbs up  👍 to encourage. \n"
                 + " default quantity = 1.";
 
         ChatPostMessageResponse resp = slackMessageService.sendMessage(orderChannel, prompt);

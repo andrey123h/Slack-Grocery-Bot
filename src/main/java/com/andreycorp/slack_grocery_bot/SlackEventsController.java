@@ -1,8 +1,8 @@
 package com.andreycorp.slack_grocery_bot;
-
+// To parse Slack’s incoming JSON payloads
 import com.fasterxml.jackson.databind.JsonNode;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.slack.api.app_backend.SlackSignature;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -37,9 +37,12 @@ public class SlackEventsController {
 
 
     @PostMapping(
+            // Specifies that the method accepts requests with a Content-Type of application/json.
             consumes = MediaType.APPLICATION_JSON_VALUE,
+            // Specifies that the method produces responses with a Content-Type of text/plain.
             produces = MediaType.TEXT_PLAIN_VALUE
     )
+
     public ResponseEntity<String> receive(
             @RequestHeader("X-Slack-Signature") String incomingSig,
             @RequestHeader("X-Slack-Request-Timestamp") String timestamp,
@@ -56,15 +59,16 @@ public class SlackEventsController {
         JsonNode payload = objectMapper.readTree(rawBody);
         String type = payload.get("type").asText();
 
-        // Handles Slack's "url_verification" event
+        //Handshake.Handles Slack's "url_verification" event
         if ("url_verification".equals(type)) {
             return ResponseEntity.ok(payload.get("challenge").asText());
         }
 
+        // real events Slack sends. type = event_callback
         if ("event_callback".equals(type)) {
-            JsonNode event = payload.get("event");
-            // ignore bot messages
-            if (event.has("bot_id")) {
+            JsonNode event = payload.get("event"); // Extract the inner "event" node
+
+            if (event.has("bot_id")) {           // ignore bot messages
                 return ResponseEntity.ok("");
             }
             String eventType = event.get("type").asText();
