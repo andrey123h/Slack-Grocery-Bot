@@ -93,7 +93,7 @@ public class SummaryService {
                                 .sum();
 
                         String suffix = totalReacts > 0
-                                ? String.format(" (%dx 👍)", totalReacts)
+                                ? String.format(" (%d× 👍)", totalReacts)
                                 : "";
 
                         // Format quantity: drop .0 for whole numbers
