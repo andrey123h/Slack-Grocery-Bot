@@ -25,7 +25,7 @@ public class SlackCommandController {
     private String orderChannel;
 
     public SlackCommandController(
-            @Value("${slack.signing-secret}") String signingSecret,
+            @Value("${slack.signing.secret}") String signingSecret,
             WeeklyOrderScheduler scheduler,
             EventStore eventStore,
             SummaryService summaryService,

@@ -1,4 +1,5 @@
 package com.andreycorp.slack_grocery_bot;
+
 // To parse Slack’s incoming JSON payloads
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,18 +32,14 @@ public class SlackEventsController {
         this.slackMessageService = slackMessageService;
         this.eventStore = eventStore;
         this.sigGenerator = new SlackSignature.Generator(signingSecret);
-        this.orderParser = orderParser;
         this.sigVerifier  = new SlackSignature.Verifier(sigGenerator);
+        this.orderParser  = orderParser;
     }
 
-
     @PostMapping(
-            // Specifies that the method accepts requests with a Content-Type of application/json.
             consumes = MediaType.APPLICATION_JSON_VALUE,
-            // Specifies that the method produces responses with a Content-Type of text/plain.
             produces = MediaType.TEXT_PLAIN_VALUE
     )
-
     public ResponseEntity<String> receive(
             @RequestHeader("X-Slack-Signature") String incomingSig,
             @RequestHeader("X-Slack-Request-Timestamp") String timestamp,
@@ -50,47 +47,54 @@ public class SlackEventsController {
     ) throws Exception {
         String rawBody = new String(rawBodyBytes, StandardCharsets.UTF_8);
 
-
-        // Slack  Signature verification
+        // 1) Verify signature
         if (!sigVerifier.isValid(timestamp, rawBody, incomingSig)) {
             return ResponseEntity.status(401).body("Invalid signature");
         }
-        // parsed the incoming JSON then pulled out type field
+
         JsonNode payload = objectMapper.readTree(rawBody);
         String type = payload.get("type").asText();
 
-        //Handshake.Handles Slack's "url_verification" event
+        // 2) URL verification handshake
         if ("url_verification".equals(type)) {
             return ResponseEntity.ok(payload.get("challenge").asText());
         }
 
-        // real events Slack sends. type = event_callback
+        // 3) Event callback
         if ("event_callback".equals(type)) {
-            JsonNode event = payload.get("event"); // Extract the inner "event" node
+            JsonNode event = payload.get("event");
 
-            if (event.has("bot_id")) {           // ignore bot messages
+            // ignore any messages from bots
+            if (event.has("bot_id")) {
                 return ResponseEntity.ok("");
             }
+
             String eventType = event.get("type").asText();
 
             if ("app_mention".equals(eventType)) {
-                // record message
                 handleMessageEvent(event);
 
-                // parse multiple orders in one line
-                List<OrderParser.ParsedOrder> orders = orderParser.parseAll(event.get("text").asText());
+                // parse all orders in the text
+                List<OrderParser.ParsedOrder> orders =
+                        orderParser.parseAll(event.get("text").asText());
 
-                // determine thread timestamp
+                // determine the correct thread timestamp
                 String threadTs = event.has("thread_ts")
                         ? event.get("thread_ts").asText()
                         : event.get("ts").asText();
 
-                // build ACK body
+                // build the acknowledgment body with proper formatting
                 String ackBody = orders.stream()
-                        .map(o -> String.format("%d× %s", o.qty, o.item))
+                        .map(o -> {
+                            boolean isWhole = o.qty == Math.floor(o.qty);
+                            String qtyStr = isWhole
+                                    ? String.format("%d", (long) o.qty)
+                                    : String.valueOf(o.qty);
+                            return String.format("%sx %s", qtyStr, o.item);
+                        })
                         .collect(Collectors.joining(", "));
 
-                // send acknowledgement in thread
+                // send the reply into the thread
                 slackMessageService.sendMessage(
                         event.get("channel").asText(),
                         String.format("Got your order: %s ✅", ackBody),
@@ -101,15 +105,15 @@ public class SlackEventsController {
                 handleReactionAdded(event);
             }
         }
+
         return ResponseEntity.ok("");
     }
 
-
     private void handleMessageEvent(JsonNode event) {
-        String user = event.get("user").asText();
+        String user    = event.get("user").asText();
         String channel = event.get("channel").asText();
-        String text = event.get("text").asText();
-        String ts = event.get("ts").asText();
+        String text    = event.get("text").asText();
+        String ts      = event.get("ts").asText();
 
         MessageEvent me = new MessageEvent(user, channel, text, ts);
         eventStore.saveMessage(me);
@@ -118,10 +122,10 @@ public class SlackEventsController {
 
     private void handleReactionAdded(JsonNode event) {
         String reaction = event.get("reaction").asText();
-        String user = event.get("user").asText();
-        JsonNode item = event.get("item");
-        String channel = item.get("channel").asText();
-        String messageTs = item.get("ts").asText();
+        String user     = event.get("user").asText();
+        JsonNode item   = event.get("item");
+        String channel  = item.get("channel").asText();
+        String messageTs= item.get("ts").asText();
 
         ReactionEvent re = new ReactionEvent(user, reaction, channel, messageTs);
         eventStore.saveReaction(re);
