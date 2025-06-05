@@ -42,27 +42,34 @@ public class SummaryService {
             List<MessageEvent> events,
             String adminChannel
     ) throws IOException {
-        if (events.isEmpty()) {
+        if (events.isEmpty()) {  // If no orders at all
             slackMessageService.sendMessage(orderChannel,
                     "No orders were placed this week.", threadTs);
             return;
         }
 
-        // Use Double for quantities to match updated parser
+        // user → (item → totalQty) { "U4" → { "orange"→2.0, "apple"→1.0 }, "U5" → { "pear"→5.0 } }.
         Map<String, Map<String, Double>> ordersByUser = new HashMap<>();
+        // user → (item → list of messageTs where that item appeared)
+        // will record exactly which message timestamps mentioned “orange,” “apple,” etc.so we can attribute “+1”
+        //{ "U4": { "apple":["1746624252.438469"], "orange":["1746624252.438469"] },
+        // "U5": { "pear":["1746624260.123000"] } }
         Map<String, Map<String, List<String>>> tsByUserItem = new HashMap<>();
 
-        for (MessageEvent m : events) {
-            String user = m.user();
+        for (MessageEvent m : events) { //  loop over every order message in the thread
+            String user = m.user();     //  Extract the Slack user ID from this
+
             ordersByUser.computeIfAbsent(user, u -> new HashMap<>());
             tsByUserItem.computeIfAbsent(user, u -> new HashMap<>());
 
-            List<OrderParser.ParsedOrder> parsed = orderParser.parseAll(m.text());
+            List<OrderParser.ParsedOrder> parsed = orderParser.parseAll(m.text()); // Parse message. returns { item="apple", qty=1.0 }
             for (OrderParser.ParsedOrder po : parsed) {
-                // merge double quantities
+                // If ordersByUser.get(user) already has a mapping for po.item, then replace it with existingQty + po.qty.
+                //If not, store po.qty under po.item.
+                // Running total of how many Items this user has ordered across all their messages.
                 ordersByUser.get(user)
                         .merge(po.item, po.qty, Double::sum);
-
+                // Record that this message timestamp mentioned po.item
                 tsByUserItem.get(user)
                         .computeIfAbsent(po.item, i -> new ArrayList<>())
                         .add(m.ts());
@@ -71,10 +78,12 @@ public class SummaryService {
 
         // Fetch +1 reactions since thread open
         List<ReactionEvent> reactions = eventStore.fetchReactionsSince(threadTs);
+        // keep only the “+1” ones, then group by the message-timestamp
+        // counting how many +1’s each message received.
         Map<String, Long> plusOneCountByTs = reactions.stream()
                 .filter(r -> "+1".equals(r.reaction()))
                 .collect(Collectors.groupingBy(
-                        ReactionEvent::ts,
+                        ReactionEvent::ts, // ts -  the message-timestamp to which it was added
                         Collectors.counting()
                 ));
 

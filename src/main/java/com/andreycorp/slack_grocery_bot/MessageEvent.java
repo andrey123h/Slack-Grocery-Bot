@@ -7,7 +7,7 @@ package com.andreycorp.slack_grocery_bot;
  * that we store for later summarization.
  */
 public record MessageEvent(
-        String user,
+        String user, // Slack user ID
         String channel,
         String text,
         String ts
