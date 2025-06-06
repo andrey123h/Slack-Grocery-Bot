@@ -1,9 +1,7 @@
 package com.andreycorp.slack_grocery_bot;
 
-// To parse Slack’s incoming JSON payloads
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.slack.api.app_backend.SlackSignature;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -14,26 +12,40 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Listens for various Slack events:
+ *  1) URL‐verification (for initial handshake).
+ *  2) "app_home_opened" (to publish a Home‐tab view, differing for admins vs. regular users).
+ *  3) "app_mention" (existing order‐processing behavior).
+ *  4) "reaction_added" (existing reaction‐recording behavior).
+
+ * The Home‐view construction logic has been moved to HomeViewBuilder.
+ */
 @RestController
 @RequestMapping("/slack/events")
 public class SlackEventsController {
     private final SlackMessageService slackMessageService;
+    private final DefaultGroceryService defaultGroceryService;
     private final EventStore eventStore;
-    private final SlackSignature.Generator sigGenerator;
+    private final OrderParser orderParser;
+    private final HomeViewBuilder homeViewBuilder;
     private final SlackSignature.Verifier sigVerifier;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final OrderParser orderParser;
 
     public SlackEventsController(
             SlackMessageService slackMessageService,
+            DefaultGroceryService defaultGroceryService,
             EventStore eventStore,
+            HomeViewBuilder homeViewBuilder,
             @Value("${slack.signing.secret}") String signingSecret,
-            OrderParser orderParser) {
+            OrderParser orderParser
+    ) {
         this.slackMessageService = slackMessageService;
+        this.defaultGroceryService = defaultGroceryService;
         this.eventStore = eventStore;
-        this.sigGenerator = new SlackSignature.Generator(signingSecret);
-        this.sigVerifier  = new SlackSignature.Verifier(sigGenerator);
-        this.orderParser  = orderParser;
+        this.orderParser = orderParser;
+        this.homeViewBuilder = homeViewBuilder;
+        this.sigVerifier = new SlackSignature.Verifier(new SlackSignature.Generator(signingSecret));
     }
 
     @PostMapping(
@@ -63,27 +75,36 @@ public class SlackEventsController {
         // 3) Event callback
         if ("event_callback".equals(type)) {
             JsonNode event = payload.get("event");
+            String eventType = event.get("type").asText();
 
-            // ignore any messages from bots
-            if (event.has("bot_id")) {
+            // 3a) Handle "app_home_opened"
+            if ("app_home_opened".equals(eventType)) {
+                String userId = event.get("user").asText();
+
+                // Check if user is workspace admin
+                boolean isAdmin = slackMessageService.isWorkspaceAdmin(userId);
+
+                if (isAdmin) {
+                    // Build and publish the Admin Home view
+                    String adminHomeJson = homeViewBuilder.buildAdminHomeJson(defaultGroceryService.listAll());
+                    slackMessageService.publishHomeView(userId, adminHomeJson);
+                } else {
+                    // Build and publish the simple User Welcome Home
+                    String userHomeJson = homeViewBuilder.buildUserWelcomeHomeJson();
+                    slackMessageService.publishHomeView(userId, userHomeJson);
+                }
                 return ResponseEntity.ok("");
             }
 
-            String eventType = event.get("type").asText();
-
+            // 3b) Existing "app_mention" behavior
             if ("app_mention".equals(eventType)) {
                 handleMessageEvent(event);
 
-                // parse all orders in the text
-                List<OrderParser.ParsedOrder> orders =
-                        orderParser.parseAll(event.get("text").asText());
-
-                // determine the correct thread timestamp
+                var orders = orderParser.parseAll(event.get("text").asText());
                 String threadTs = event.has("thread_ts")
                         ? event.get("thread_ts").asText()
                         : event.get("ts").asText();
 
-                // build the acknowledgment body with proper formatting
                 String ackBody = orders.stream()
                         .map(o -> {
                             boolean isWhole = o.qty == Math.floor(o.qty);
@@ -94,15 +115,18 @@ public class SlackEventsController {
                         })
                         .collect(Collectors.joining(", "));
 
-                // send the reply into the thread
                 slackMessageService.sendMessage(
                         event.get("channel").asText(),
                         String.format("Got your order: %s ✅", ackBody),
                         threadTs
                 );
+                return ResponseEntity.ok("");
+            }
 
-            } else if ("reaction_added".equals(eventType)) {
+            // 3c) Existing "reaction_added" behavior
+            if ("reaction_added".equals(eventType)) {
                 handleReactionAdded(event);
+                return ResponseEntity.ok("");
             }
         }
 

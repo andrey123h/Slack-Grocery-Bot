@@ -18,7 +18,7 @@ public class SlackTestController {
         this.scheduler = scheduler;
     }
     // curl.exe https:(ngrok url)/slack/test/open
-    /** Immediately opens a new grocery order thread. */
+    /** Immecdiately opens a new grocery order thread. */
     @GetMapping("/open")
     public ResponseEntity<String> openThread() throws Exception {
         scheduler.openOrderThread();

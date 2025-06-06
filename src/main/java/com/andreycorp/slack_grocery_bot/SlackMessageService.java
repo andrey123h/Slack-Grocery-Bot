@@ -129,4 +129,39 @@ public class SlackMessageService {
             throw new IOException("Failed to call users.info", e);
         }
     }
+
+    /**
+     * Publishes a Home‐tab view for a specific user.
+     * Use the raw JSON you copied from Block Kit Builder’s “App Home Preview.”
+     */
+    public void publishHomeView(String userId, String viewJson) throws IOException {
+        try {
+            var response = client().viewsPublish(req -> req
+                    .userId(userId)
+                    .viewAsString(viewJson)
+            );
+            if (!response.isOk()) {
+                throw new IOException("Slack API error on views.publish: " + response.getError());
+            }
+        } catch (SlackApiException e) {
+            throw new IOException("Failed to call views.publish", e);
+        }
+    }
+
+    /**
+     * Opens a Modal view (raw JSON from Block Kit Builder’s “Modal Preview”).
+     */
+    public void openModal(String triggerId, String viewJson) throws IOException {
+        try {
+            var response = client().viewsOpen(req -> req
+                    .triggerId(triggerId)
+                    .viewAsString(viewJson)
+            );
+            if (!response.isOk()) {
+                throw new IOException("Slack API error on views.open: " + response.getError());
+            }
+        } catch (SlackApiException e) {
+            throw new IOException("Failed to call views.open", e);
+        }
+    }
 }
