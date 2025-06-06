@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
  *   • Overflow menu (Edit / Delete)
  *   • Modal submissions
  *
- * We no longer need a slash command, since the Home view is published automatically on app_home_opened.
  */
 @RestController
 @RequestMapping("/slack")
@@ -59,8 +58,8 @@ public class DefaultsController {
             @RequestHeader("X-Slack-Request-Timestamp") String tsHeader,
             @RequestParam("payload") String payloadFormField
     ) throws Exception {
-        // In production, you should verify the signature against the raw request bytes.
-        // For brevity, we assume that signature is checked elsewhere or disabled:
+        // Bug: 401
+        //
         //
         //   if (!sigVerifier.isValid(tsHeader, rawUrlEncodedBodyBytes, slackSig)) {
         //       return ResponseEntity.status(401).body("");
