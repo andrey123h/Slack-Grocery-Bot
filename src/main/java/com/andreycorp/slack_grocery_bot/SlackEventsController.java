@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 
 /**
  * Listens for various Slack events:
- *  1) URL‐verification (for initial handshake).
+ *  1) URL‐verification (for initial handshake - slacks challenge).
  *  2) "app_home_opened" (to publish a Home‐tab view, differing for admins vs. regular users).
- *  3) "app_mention" (existing order‐processing behavior).
- *  4) "reaction_added" (existing reaction‐recording behavior).
-
- * The Home‐view construction logic has been moved to HomeViewBuilder.
+ *  2.1 this controller builds & publishes the initial Home-tab view on app_home_opened.
+ *  2.2 DefaultsController is the interaction handler for user interactions with the Home view.
+ *  3) "app_mention" (users order recording and processing).
+ *  4) "reaction_added" (reaction‐recording behavior).
  */
 @RestController
 @RequestMapping("/slack/events")
@@ -49,8 +49,8 @@ public class SlackEventsController {
     }
 
     @PostMapping(
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.TEXT_PLAIN_VALUE
+            consumes = MediaType.APPLICATION_JSON_VALUE, //  Accepts JSON payloads
+            produces = MediaType.TEXT_PLAIN_VALUE //  Returns plain text responses
     )
     public ResponseEntity<String> receive(
             @RequestHeader("X-Slack-Signature") String incomingSig,
@@ -59,29 +59,29 @@ public class SlackEventsController {
     ) throws Exception {
         String rawBody = new String(rawBodyBytes, StandardCharsets.UTF_8);
 
-        // 1) Verify signature
+        //  Verify signature
         if (!sigVerifier.isValid(timestamp, rawBody, incomingSig)) {
             return ResponseEntity.status(401).body("Invalid signature");
         }
-
+        //  Parse the JSON payload
         JsonNode payload = objectMapper.readTree(rawBody);
         String type = payload.get("type").asText();
 
-        // 2) URL verification handshake
+        // URL verification
         if ("url_verification".equals(type)) {
             return ResponseEntity.ok(payload.get("challenge").asText());
         }
 
-        // 3) Event callback
+        // Event callback.
         if ("event_callback".equals(type)) {
             JsonNode event = payload.get("event");
             String eventType = event.get("type").asText();
 
-            // 3a) Handle "app_home_opened"
+            // 3a) Handle "app_home_opened" - Slack sends app_home_opened event whenever any user clicks on app.
             if ("app_home_opened".equals(eventType)) {
                 String userId = event.get("user").asText();
 
-                // Check if user is workspace admin
+                // Check if user is workspace admin. HomeViewBuilder for the correct Home-tab JSON
                 boolean isAdmin = slackMessageService.isWorkspaceAdmin(userId);
 
                 if (isAdmin) {
@@ -95,11 +95,9 @@ public class SlackEventsController {
                 }
                 return ResponseEntity.ok("");
             }
-
-            // 3b) Existing "app_mention" behavior
+            // Handle "app_mention" events and response massage
             if ("app_mention".equals(eventType)) {
                 handleMessageEvent(event);
-
                 var orders = orderParser.parseAll(event.get("text").asText());
                 String threadTs = event.has("thread_ts")
                         ? event.get("thread_ts").asText()
@@ -123,7 +121,7 @@ public class SlackEventsController {
                 return ResponseEntity.ok("");
             }
 
-            // 3c) Existing "reaction_added" behavior
+
             if ("reaction_added".equals(eventType)) {
                 handleReactionAdded(event);
                 return ResponseEntity.ok("");

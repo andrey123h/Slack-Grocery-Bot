@@ -28,20 +28,22 @@ public class DefaultsController {
     private final SlackSignature.Generator sigGenerator;
     private final SlackSignature.Verifier sigVerifier;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HomeViewBuilder homeViewBuilder;
 
     public DefaultsController(
             SlackMessageService slackMessageService,
             DefaultGroceryService defaultGroceryService,
-            @Value("${slack.signing.secret}") String signingSecret
+            @Value("${slack.signing.secret}") String signingSecret, HomeViewBuilder homeViewBuilder
     ) {
         this.slackMessageService = slackMessageService;
         this.defaultGroceryService = defaultGroceryService;
         this.sigGenerator = new SlackSignature.Generator(signingSecret);
+        this.homeViewBuilder = homeViewBuilder;
         this.sigVerifier = new SlackSignature.Verifier(sigGenerator);
     }
 
     /**
-     * Interaction endpoint for:
+     *  endpoint for:
      *   • block_actions (button clicks, overflow menu)
      *   • view_submission (modal “Save”)
      *
@@ -50,8 +52,8 @@ public class DefaultsController {
      */
     @PostMapping(
             path = "/interact/defaults",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.TEXT_PLAIN_VALUE
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, //  Accepts URL-encoded form data
+            produces = MediaType.TEXT_PLAIN_VALUE //  Returns plain text responses
     )
     public ResponseEntity<String> handleDefaultsInteraction(
             @RequestHeader("X-Slack-Signature") String slackSig,
@@ -65,12 +67,16 @@ public class DefaultsController {
         //       return ResponseEntity.status(401).body("");
         //   }
 
-        // 1) Parse the JSON payload.
+        // Parse the JSON payload.
         JsonNode payload = objectMapper.readTree(payloadFormField);
         String type = payload.get("type").asText();
 
+        //  Handle different interaction types
+        //  "add_default" - open an empty modal
+        //  "default_item_actions" → parse "EDIT|item" or "DELETE|item"
+
         if ("block_actions".equals(type)) {
-            // Admin clicked “➕ Add New Default” or overflow menu in the Home view.
+            // Admin clicked a button or selected an overflow menu item.
             JsonNode action = payload.get("actions").get(0);
             String actionId = action.get("action_id").asText();
 
@@ -92,7 +98,7 @@ public class DefaultsController {
                     if ("DELETE".equals(mode)) {
                         // Remove from store, then re‐publish Home view
                         defaultGroceryService.deleteDefault(itemName);
-                        String homeJson = rebuildAdminHomeJson(defaultGroceryService.listAll());
+                        String homeJson = homeViewBuilder.buildAdminHomeJson(defaultGroceryService.listAll());
                         slackMessageService.publishHomeView(userId, homeJson);
                     } else { // mode == "EDIT"
                         // Prefill modal with existing values
@@ -106,8 +112,9 @@ public class DefaultsController {
                 // (Ignore any other action_id.)
             }
         }
+        // Admin clicked “Save” inside the “Add/Edit Default” modal.
         else if ("view_submission".equals(type)) {
-            // Admin clicked “Save” inside the “Add/Edit Default” modal.
+
             JsonNode view = payload.get("view");
             String privateMeta = view.get("private_metadata").asText();
             // private_metadata = "ADD|" or "EDIT|OriginalName"
@@ -124,7 +131,7 @@ public class DefaultsController {
             int newQty;
             try {
                 newQty = Integer.parseInt(qtyText);
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException e) { // If parsing fails, default to 1
                 newQty = 1;
             }
 
@@ -135,93 +142,23 @@ public class DefaultsController {
                 if (originalItem != null && !originalItem.equals(newItemName)) {
                     defaultGroceryService.deleteDefault(originalItem);
                 }
+                //  upsert the new item (which may be the same name)
                 defaultGroceryService.upsertDefault(newItemName, newQty);
             }
 
             // After saving, re‐publish the Admin Home view so the list refreshes
-            String userId = payload.get("user").get("id").asText();
-            String homeJson = rebuildAdminHomeJson(defaultGroceryService.listAll());
+            String userId = payload.get("user").get("id").asText(); // to  know whose Home tab to update
+            // 1) Get the updated defaults map
+            Map<String,Integer> defaults = defaultGroceryService.listAll();
+            // 2) Build the full Home-tab JSON using your shared builder
+            String homeJson = homeViewBuilder.buildAdminHomeJson(defaults);
+            // 3) Publish the view
             slackMessageService.publishHomeView(userId, homeJson);
-            // Returning 200 OK auto‐closes the modal.
         }
-
-        // Always respond 200 OK so Slack knows we handled the interaction.
         return ResponseEntity.ok("");
     }
 
-    /**
-     * Rebuild the Admin Home JSON by calling exactly the same helper used in SlackEventsController.
-     * This helper is essentially the same code, so that the “Defaults” list refreshes after each add/edit/delete.
-     */
-    private String rebuildAdminHomeJson(Map<String, Integer> defaults) {
-        // (A) The static “Welcome” block (same as in the event controller)
-        String welcomeBlock =
-                "{\n" +
-                        "  \"type\": \"header\",\n" +
-                        "  \"text\": { \"type\": \"plain_text\", \"text\": \"👋 Welcome to Office Grocery Bot\", \"emoji\": true }\n" +
-                        "},\n" +
-                        "{\n" +
-                        "  \"type\": \"section\",\n" +
-                        "  \"text\": { \"type\": \"mrkdwn\", \"text\": \"Hello! If you’re an admin, you can manage default groceries below. If you’re not an admin, please see your instructions above.\" }\n" +
-                        "},\n" +
-                        "{ \"type\": \"divider\" },\n";
 
-        // (B) The “Current Defaults:” header
-        String defaultsHeader =
-                "{\n" +
-                        "  \"type\": \"section\",\n" +
-                        "  \"text\": { \"type\": \"mrkdwn\", \"text\": \"*Current Defaults:*\" }\n" +
-                        "},\n";
-
-        // (C) One section+overflow per default item
-        String itemBlocks = defaults.entrySet().stream()
-                .map(e -> {
-                    String name = e.getKey();
-                    int qty = e.getValue();
-                    return "    { \"type\": \"section\",\n" +
-                            "      \"text\": { \"type\": \"mrkdwn\", \"text\": \"• *" + name + "* — " + qty + "\" },\n" +
-                            "      \"accessory\": {\n" +
-                            "        \"type\": \"overflow\",\n" +
-                            "        \"action_id\": \"default_item_actions\",\n" +
-                            "        \"options\": [\n" +
-                            "          { \"text\": { \"type\": \"plain_text\", \"text\": \"Edit\", \"emoji\": true }, \"value\": \"EDIT|" + name + "\" },\n" +
-                            "          { \"text\": { \"type\": \"plain_text\", \"text\": \"Delete\", \"emoji\": true }, \"value\": \"DELETE|" + name + "\" }\n" +
-                            "        ]\n" +
-                            "      }\n" +
-                            "    },";
-                })
-                .collect(Collectors.joining("\n"));
-
-        String dynamicPart = itemBlocks.isEmpty()
-                ? ""
-                : itemBlocks + "\n";
-
-        // (D) The final divider + “Add New Default” button
-        String footerPart =
-                "{ \"type\": \"divider\" },\n" +
-                        "{\n" +
-                        "  \"type\": \"actions\",\n" +
-                        "  \"elements\": [\n" +
-                        "    {\n" +
-                        "      \"type\": \"button\",\n" +
-                        "      \"text\": { \"type\": \"plain_text\", \"text\": \"➕ Add New Default\", \"emoji\": true },\n" +
-                        "      \"action_id\": \"add_default\",\n" +
-                        "      \"style\": \"primary\"\n" +
-                        "    }\n" +
-                        "  ]\n" +
-                        "}\n";
-
-        // (E) Wrap as “home” JSON
-        return "{\n" +
-                "  \"type\": \"home\",\n" +
-                "  \"blocks\": [\n" +
-                welcomeBlock +
-                defaultsHeader +
-                dynamicPart +
-                footerPart +
-                "  ]\n" +
-                "}";
-    }
 
     /**
      * Build a modal JSON that pre‐fills “Item Name” and “Quantity” in the blocks.

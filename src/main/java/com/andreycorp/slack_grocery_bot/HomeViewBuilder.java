@@ -6,8 +6,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Centralizes the Home‐view JSON construction logic.
+ *  Home‐view JSON construction logic.
  */
+
 @Component
 public class HomeViewBuilder {
 

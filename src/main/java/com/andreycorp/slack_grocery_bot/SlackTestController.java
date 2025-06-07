@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Manual test endpoints to trigger the open/close logic without waiting for scheduled times.
+ * Manual test endpoints to trigger the open/close logic.
  */
 @RestController
 @RequestMapping("/slack/test")
