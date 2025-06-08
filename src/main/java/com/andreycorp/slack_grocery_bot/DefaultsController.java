@@ -2,13 +2,15 @@ package com.andreycorp.slack_grocery_bot;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.slack.api.app_backend.SlackSignature;
-import org.springframework.beans.factory.annotation.Value;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -25,56 +27,63 @@ public class DefaultsController {
 
     private final SlackMessageService slackMessageService;
     private final DefaultGroceryService defaultGroceryService;
-    private final SlackSignature.Generator sigGenerator;
-    private final SlackSignature.Verifier sigVerifier;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final HomeViewBuilder homeViewBuilder;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public DefaultsController(
             SlackMessageService slackMessageService,
             DefaultGroceryService defaultGroceryService,
-            @Value("${slack.signing.secret}") String signingSecret, HomeViewBuilder homeViewBuilder
+            HomeViewBuilder homeViewBuilder
     ) {
         this.slackMessageService = slackMessageService;
         this.defaultGroceryService = defaultGroceryService;
-        this.sigGenerator = new SlackSignature.Generator(signingSecret);
         this.homeViewBuilder = homeViewBuilder;
-        this.sigVerifier = new SlackSignature.Verifier(sigGenerator);
     }
 
     /**
-     *  endpoint for:
-     *   • block_actions (button clicks, overflow menu)
-     *   • view_submission (modal “Save”)
-     *
-     * Slack will POST with Content-Type = application/x-www-form-urlencoded
-     * and a field named “payload” containing the JSON.
+     * Handles Slack block_actions & view_submission for defaults.
+     * Expects Content-Type = application/x-www-form-urlencoded with a "payload" field.
      */
     @PostMapping(
             path = "/interact/defaults",
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, //  Accepts URL-encoded form data
-            produces = MediaType.TEXT_PLAIN_VALUE //  Returns plain text responses
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.TEXT_PLAIN_VALUE
     )
-    public ResponseEntity<String> handleDefaultsInteraction(
-            @RequestHeader("X-Slack-Signature") String slackSig,
-            @RequestHeader("X-Slack-Request-Timestamp") String tsHeader,
-            @RequestParam("payload") String payloadFormField
-    ) throws Exception {
-        // Bug: 401
-        //
-        //
-        //   if (!sigVerifier.isValid(tsHeader, rawUrlEncodedBodyBytes, slackSig)) {
-        //       return ResponseEntity.status(401).body("");
-        //   }
+    public ResponseEntity<String> handleDefaultsInteraction(HttpServletRequest request) throws IOException {
+        // 1) Retrieve the raw URL-encoded body that the filter cached
+        String rawBody = (String) request.getAttribute("rawBody");
+        if (rawBody == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Missing request body");
+        }
 
-        // Parse the JSON payload.
-        JsonNode payload = objectMapper.readTree(payloadFormField);
+        // 2) Parse the form-encoded pairs into a Map
+        Map<String, String> params = Arrays.stream(rawBody.split("&"))
+                .map(pair -> pair.split("=", 2))
+                .filter(parts -> parts.length == 2)
+                .collect(Collectors.toMap(
+                        parts -> URLDecoder.decode(parts[0], StandardCharsets.UTF_8),
+                        parts -> URLDecoder.decode(parts[1], StandardCharsets.UTF_8)
+                ));
+
+        // 3) Extract the JSON payload
+        String jsonPayload = params.get("payload");
+        if (jsonPayload == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Missing payload");
+        }
+
+        // Parse the JSON payload
+        JsonNode payload = objectMapper.readTree(jsonPayload);
         String type = payload.get("type").asText();
 
         //  Handle different interaction types
         //  "add_default" - open an empty modal
         //  "default_item_actions" → parse "EDIT|item" or "DELETE|item"
 
+        // Rest of your existing code remains the same...
         if ("block_actions".equals(type)) {
             // Admin clicked a button or selected an overflow menu item.
             JsonNode action = payload.get("actions").get(0);

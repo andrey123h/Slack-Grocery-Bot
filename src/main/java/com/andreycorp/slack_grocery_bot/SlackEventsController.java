@@ -2,8 +2,7 @@ package com.andreycorp.slack_grocery_bot;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.slack.api.app_backend.SlackSignature;
-import org.springframework.beans.factory.annotation.Value;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +28,6 @@ public class SlackEventsController {
     private final EventStore eventStore;
     private final OrderParser orderParser;
     private final HomeViewBuilder homeViewBuilder;
-    private final SlackSignature.Verifier sigVerifier;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public SlackEventsController(
@@ -37,35 +35,26 @@ public class SlackEventsController {
             DefaultGroceryService defaultGroceryService,
             EventStore eventStore,
             HomeViewBuilder homeViewBuilder,
-            @Value("${slack.signing.secret}") String signingSecret,
             OrderParser orderParser
     ) {
         this.slackMessageService = slackMessageService;
         this.defaultGroceryService = defaultGroceryService;
         this.eventStore = eventStore;
         this.orderParser = orderParser;
-        this.homeViewBuilder = homeViewBuilder;
-        this.sigVerifier = new SlackSignature.Verifier(new SlackSignature.Generator(signingSecret));
-    }
+        this.homeViewBuilder = homeViewBuilder;}
 
     @PostMapping(
             consumes = MediaType.APPLICATION_JSON_VALUE, //  Accepts JSON payloads
             produces = MediaType.TEXT_PLAIN_VALUE //  Returns plain text responses
     )
     public ResponseEntity<String> receive(
-            @RequestHeader("X-Slack-Signature") String incomingSig,
-            @RequestHeader("X-Slack-Request-Timestamp") String timestamp,
-            @RequestBody byte[] rawBodyBytes
+            HttpServletRequest request
     ) throws Exception {
-        String rawBody = new String(rawBodyBytes, StandardCharsets.UTF_8);
 
-        //  Verify signature
-        if (!sigVerifier.isValid(timestamp, rawBody, incomingSig)) {
-            return ResponseEntity.status(401).body("Invalid signature");
-        }
-        //  Parse the JSON payload
+        //Parse json body from the request
+        String rawBody = (String) request.getAttribute("rawBody");
         JsonNode payload = objectMapper.readTree(rawBody);
-        String type = payload.get("type").asText();
+        String type = payload.path("type").asText();
 
         // URL verification
         if ("url_verification".equals(type)) {
