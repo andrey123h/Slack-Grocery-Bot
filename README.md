@@ -24,11 +24,11 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 
 ### Controllers (Spring MVC):
    - Event controller handles incoming Slack event payloads (messages, reactions, URL verification, block actions).
-   - Command controller listens for slash commands (e.g. /grocery-summary-admin).
+   - Command controller listens for slash commands .
    - Defaults controller manages admin interactions for editing the default items list via Block Kit.
 
 ### Signature Verification:
-  - A reusable middleware uses Slack’s signing secret to verify each HTTP request is genuinely from Slack before any business logic runs.
+  - HTTP middleware uses Slack’s signing secret to verify each HTTP request is genuinely from Slack before any business logic runs.
 
 ### Storing:
   - An interface (currently backed by an in-memory implementation) records messages and reactions.
