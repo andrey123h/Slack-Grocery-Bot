@@ -9,7 +9,7 @@ interactive UI, uses Java’s regex for
 parsing free-form message text, and relies on Jackson
 for JSON payload handling. Timed operations are
 handled by Spring Scheduling. Testing with JUnit & Mockito.
-Used middleware for authentication and validating of Slack signature 
+Implementing middleware (filter) for authentication and validating of Slack signature 
 ### In progress: DB, adding deployment pipelines for staging and production, LLM API integration.
 
 
@@ -28,7 +28,7 @@ Used middleware for authentication and validating of Slack signature
    - Defaults controller manages admin interactions for editing the default items list via Block Kit.
 
 ### Signature Verification:
-  - A reusable middleware (filter) uses Slack’s signing secret to verify each HTTP request is genuinely from Slack before any business logic runs.
+  - A reusable middleware uses Slack’s signing secret to verify each HTTP request is genuinely from Slack before any business logic runs.
 
 ### Storing:
   - An interface (currently backed by an in-memory implementation) records messages and reactions.
