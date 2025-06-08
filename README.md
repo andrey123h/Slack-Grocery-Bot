@@ -32,7 +32,6 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 
 ### Storing:
   - An interface (currently backed by an in-memory implementation) records messages and reactions.
-  - This pluggable design lets you swap in a JDBC/Postgres store later without touching the core logic.
 
 ### Business Services:
  - OrderParser turns free-form text into structured item–quantity pairs.
