@@ -42,7 +42,7 @@ Used middleware for authentication and validating of Slack signature
 
 ### Scheduling & Async Processing:
   - A WeeklyOrderScheduler component, driven by Spring’s @Scheduled, automatically opens and closes threads on configured time.
-  - Long running tasks run in the background via CompletableFuture, ensuring always acknowledge Slack within their 3 second timeout.
+  - Long running tasks run in the background, ensuring always acknowledge Slack within their 3 second timeout.
 
 
    
