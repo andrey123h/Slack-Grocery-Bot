@@ -8,11 +8,12 @@ for JSON payload handling. Timed operations are
 handled by Spring Scheduling. Testing with JUnit & Mockito.
 Used middleware for authentication and validating of Slack signature 
 ### In progress: DB, adding deployment pipelines for staging and production, LLM API integration.
+
 ![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and etc.
 
-Funcullality: 
+### Funcullality: 
 - Opens a new thread (Monday morning) in a designated “orders” channel with simple ordering instructions.
 - Collects user orders via free form messages (no strict form is require)
 - Allows “+1” reactions on others’ orders to indicate support and popularity of items.
