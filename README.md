@@ -9,7 +9,7 @@ interactive UI, uses Java’s regex for
 parsing free-form message text, and relies on Jackson
 for JSON payload handling. Timed operations are
 handled by Spring Scheduling. Testing with JUnit & Mockito.
-Implementing middleware (filter) for authentication and validating of Slack signature 
+Implementing an HTTP middleware for authentication and validating of Slack signature 
 ### In progress: DB, adding deployment pipelines for staging and production, LLM API integration.
 
 
