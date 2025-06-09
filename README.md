@@ -37,10 +37,10 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 - HTTP middleware uses Slack’s signing secret to verify each HTTP request is genuinely from Slack before any business logic runs.
 
 ### Integration Points
-Event Subscription: Processes Slack events including messages, reactions, and app-clickes
-Interactive Components: Handles button clicks and menu selections the interface
-Command Handling: Responds to slash commands for administrative functions
-View Publishing: Dynamically builds and updates Home tab views
+- Event Subscription: Processes Slack events including messages, reactions, and app-clickes
+- Interactive Components: Handles button clicks and menu selections the interface
+- Command Handling: Responds to slash commands for administrative functions
+- View Publishing: Dynamically builds and updates Home tab views
 
 
    
