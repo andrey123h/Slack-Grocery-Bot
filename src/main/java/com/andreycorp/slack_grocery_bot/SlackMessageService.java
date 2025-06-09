@@ -6,6 +6,7 @@ import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.methods.response.conversations.ConversationsOpenResponse;
 import com.slack.api.methods.response.pins.PinsAddResponse;
+import com.slack.api.methods.response.reactions.ReactionsAddResponse;
 import com.slack.api.methods.response.users.UsersInfoResponse;
 import com.slack.api.model.User; // isAdmin() isOwner()
 import org.springframework.beans.factory.annotation.Value;
@@ -21,10 +22,9 @@ public class SlackMessageService {
     private String botToken;
 
     /**
-     * Helper to get a MethodsClient instance.
-     * Creates and returns an instance of MethodsClient, which is used to interact with Slack's API.
-     * The client is initialized with the bot token to authenticate API requests.
-     * @return MethodsClient instance configured with the bot token.
+     * Returns a MethodsClient instance for making Slack API calls.
+     * This client is configured with the bot token from application properties.
+     * centralizes here to avoid repeating in every method.
      */
 
     private MethodsClient client() {
@@ -164,4 +164,25 @@ public class SlackMessageService {
             throw new IOException("Failed to call views.open", e);
         }
     }
+
+
+    /**
+     * Adds a reaction (emoji) to a Slack message. Used for "Completed" reaction
+     */
+    public void addReaction(String channel, String ts, String emojiName) throws IOException {
+        try {
+            ReactionsAddResponse response = client().reactionsAdd(req -> req
+                    .channel(channel)
+                    .timestamp(ts)
+                    .name(emojiName)
+            );
+            if (!response.isOk()) {
+                throw new IOException("Slack API error on reactions.add: " + response.getError());
+            }
+        } catch (SlackApiException e) {
+            throw new IOException("Failed to add reaction", e);
+        }
+    }
+
+
 }

@@ -29,6 +29,7 @@ class SlackSignatureFilterTest {
 
     @BeforeEach
     void setUp() {
+        // exactly what Slack does on its side when it signs every request
         sigGenerator = new SlackSignature.Generator(signingSecret);
     }
 

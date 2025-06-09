@@ -49,9 +49,9 @@ public class SlackSignatureFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        // wrap so we can read the raw body without consuming the stream
+        // buffers the incoming body so we can read it here without consuming it for  controllers.
         ContentCachingRequestWrapper wrapped = new ContentCachingRequestWrapper(request);
-
+        // Extract headers
         String timestamp = wrapped.getHeader("X-Slack-Request-Timestamp");
         String signature = wrapped.getHeader("X-Slack-Signature");
         if (timestamp == null || signature == null) {
@@ -63,17 +63,18 @@ public class SlackSignatureFilter extends OncePerRequestFilter {
         // read the raw bytes exactly as Slack sent them
         byte[] body = StreamUtils.copyToByteArray(wrapped.getInputStream());
         String rawBody = new String(body, StandardCharsets.UTF_8);
-        // make the raw JSON available downstream
+        // Make it available downstream
+        // Controllers can retrieve the JSON string via request.getAttribute("rawBody")
         wrapped.setAttribute("rawBody", rawBody);
 
-        // verify!
+        // Verify signature
         if (!verifier.isValid(timestamp, rawBody, signature)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                     "Invalid Slack signature");
             return;
         }
 
-        // if OK, forward the *wrapped* request so controllers can still read the body/params
+        // If everything ok, the request handed off to the next filter or controller.
         filterChain.doFilter(wrapped, response);
     }
 }

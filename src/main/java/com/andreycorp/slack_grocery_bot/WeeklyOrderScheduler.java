@@ -44,16 +44,24 @@ public class WeeklyOrderScheduler {
      */
     @Scheduled(cron = "0 0 9 * * MON", zone = "Asia/Jerusalem")
     public void openOrderThread() throws Exception {
-        // Compose prompt with instructions directly
-        String prompt = "*🛒 New Grocery Order Thread!* Please add your items by Thursday EOD.\n"
-                + " Mention me, then list your items in one line:\n"
-                + " @Office Grocery Bot 2 apples, 1.5 kg sugar, banana\n"
-                + " Supported formats: \n"
-                + "     – Integers or decimals for quantity (e.g. 2, 1.5)\n"
-                + "     – Commas ,, semicolons ;, or periods . before a space+digit to separate entries\n"
-                + "     – Multi-word items (e.g. 2 green apples)\n"
-                + "     – Items without quantities default to 1 (e.g. crème fraîche)\n"
-                + "     – Special characters are supported (e.g. hähnchen)\n";
+        // Compose prompt with instructions
+                String prompt =
+                "*🛒 New Grocery Order Thread!* Please add your items by Thursday EOD.\n" +
+                        "\n" +
+                        "Mention me, then list your items in one line:\n" +
+                        "```" +
+                        "@GrocFriend 2 apples, 1.5 kg sugar, banana\n" +
+                        "```" +
+                        "\n" +
+                        "Supported formats:\n" +
+                        "    – Integers or decimals for quantity (e.g. `2`, `1.5`)\n" +
+                        "    – Commas, semicolons or periods before a space to separate items\n" +
+                        "    – Multi-word items (e.g. `2 green apples`)\n" +
+                        "    – Items without quantities default to `1`\n" +
+                        "    – Special characters are supported (e.g. `crème fraîche`)\n" +
+                        "\n" +
+                        "React with 👍 to encourage an order!\n";
+
 
         ChatPostMessageResponse resp = slackMessageService.sendMessage(orderChannel, prompt);
         if (resp.isOk()) {

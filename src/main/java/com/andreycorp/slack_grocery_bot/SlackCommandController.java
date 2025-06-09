@@ -7,8 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -38,64 +36,73 @@ public class SlackCommandController {
     }
 
     @PostMapping(
-            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
-            produces = MediaType.TEXT_PLAIN_VALUE
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, // expects URL-encoded form data
+            produces = MediaType.TEXT_PLAIN_VALUE // reply with plain text
     )
     public ResponseEntity<String> handle(HttpServletRequest request) throws IOException {
-        // 1) Grab the raw URL-encoded body that our filter saved
-        String rawBody = (String) request.getAttribute("rawBody");
-        if (rawBody == null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body("Missing request body");
-        }
-
-        // 2) Parse it into a Map<String,String>
-        Map<String,String> params = Arrays.stream(rawBody.split("&"))
-                .map(pair -> pair.split("=", 2))
-                .filter(parts -> parts.length == 2)
-                .collect(Collectors.toMap(
-                        parts -> URLDecoder.decode(parts[0], StandardCharsets.UTF_8),
-                        parts -> URLDecoder.decode(parts[1], StandardCharsets.UTF_8)
-                ));
+        // extracting and parsing JSON body that filter cached
+        String rawBody = SlackRequestParser.extractRawBody(request);
+        Map<String,String> params = SlackRequestParser.parseFormUrlEncoded(rawBody);
 
         String command = params.get("command");
         String userId  = params.get("user_id");
 
-        // 3) Validate required params
+        // Check for required parameters and command validity
+        ResponseEntity<String> error = validateSlashCommand(command, userId);
+        if (error != null) {
+            return error;
+        }
+
+        // 5) Immediate ack
+        ResponseEntity<String> ack = ResponseEntity.ok(
+                "📨 Got it! Generating your summary.."
+        );
+
+        // 6) Heavy work off the HTTP thread
+        runSummaryTask(userId);
+
+        return ack;
+    }
+
+    /**
+     * Ensures the slash payload has both command & user_id,
+     * and that the command matches  expected value.
+     * @param command the slash command string (e.g. "/grocery-summary-admin")
+     * @param userId The Slack user ID of the user who issued the command
+     * @return a 400 ResponseEntity on error, or null if OK
+     */
+    private ResponseEntity<String> validateSlashCommand(String command, String userId) {
         if (command == null || userId == null) {
             return ResponseEntity
                     .badRequest()
                     .body("Required parameters 'command' and 'user_id' are missing");
         }
-
-        // 4) Confirm correct command
         if (!"/grocery-summary-admin".equals(command)) {
             return ResponseEntity
                     .badRequest()
                     .body("Unknown command: " + command);
         }
+        return null;
+    }
 
-        // 5) Immediate ack
-        ResponseEntity<String> ack = ResponseEntity.ok(
-                "📨 Got it! Generating your summary..."
-        );
-
-        // 6) Heavy work off the HTTP thread
+    /**
+     * Kicks off the summary generation asynchronously.
+     * Checks if the user is a workspace admin and if there is an active grocery thread.
+     * @param userId the Slack user ID of the command invoker
+     */
+    private void runSummaryTask(String userId) {
         CompletableFuture.runAsync(() -> {
             try {
                 if (!slackMessageService.isWorkspaceAdmin(userId)) {
                     String dm = slackMessageService.openImChannel(userId);
-                    slackMessageService.sendMessage(dm,
-                            "Only workspace admins can run this command.");
+                    slackMessageService.sendMessage(dm, "Only workspace admins can run this command.");
                     return;
                 }
 
                 String threadTs = scheduler.getCurrentThreadTs();
                 if (threadTs == null) {
                     String dm = slackMessageService.openImChannel(userId);
-                    slackMessageService.sendMessage(dm,
-                            "No active grocery thread to summarize.");
+                    slackMessageService.sendMessage(dm, "No active grocery thread to summarize.");
                     return;
                 }
 
@@ -110,12 +117,10 @@ public class SlackCommandController {
                 e.printStackTrace();
                 try {
                     String dm = slackMessageService.openImChannel(userId);
-                    slackMessageService.sendMessage(dm,
-                            "Something went wrong generating your summary.");
+                    slackMessageService.sendMessage(dm, "Something went wrong generating your summary.");
                 } catch (IOException ignored) {}
             }
         });
-
-        return ack;
     }
+
 }
