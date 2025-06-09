@@ -15,33 +15,32 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
-### Funcullality: 
+### Core Funcullality: 
 - Opens a new thread (Monday morning) in a designated “orders” channel with simple ordering instructions.
 - Collects user orders via free form messages (no strict form is require)
 - Allows “+1” reactions on others’ orders to indicate support and popularity of items.
 - Closes the thread later in the week (Thursday afternoon) and posts a formatted summary showing per-user totals and reaction counts.
-- Provides admin tools including a slash command to trigger on-demand summaries and an interactive Block Kit UI for managing default item lists.
+- Provides admin tools including a slash command to trigger on-demand summaries.
+- Interactive Block Kit UI for managing default item lists.
 
-### Controllers (Spring MVC):
-   - Event controller handles incoming Slack event payloads (messages, reactions, URL verification, block actions).
-   - Command controller listens for slash commands .
-   - Defaults controller manages admin interactions for editing the default items list via Block Kit.
+### Admin Features
+- Interactive UI: Block Kit interface for managing default grocery items
+- On-Demand Summaries: Slash command to generate summaries anytime, DM and thread support.
 
-### Signature Verification:
-  - HTTP middleware uses Slack’s signing secret to verify each HTTP request is genuinely from Slack before any business logic runs.
 
-### Storing:
-  - An interface (currently backed by an in-memory implementation) records messages and reactions.
+### User Experience
+- Simple Ordering: Users just mention the bot and list items (e.g - '@GrocFriend 10 apple, 2.5 kg sugar, Milk') 
+- Format Flexibility: Supports varied input formats 
+- Default Handling: Assumes quantity of 1 when not specified
 
-### Business Services:
- - OrderParser turns free-form text into structured item–quantity pairs.
- - SummaryService aggregates events, counts reactions, composes the summary text.
- - SlackMessageService wraps Slack’s Java SDK calls (opening channels, sending messages, publishing Home-tab views, inspections for users type).
- - HomeViewBuilder constructs a dynamic Home-tab interface for workspace admins and regular users.
+### Secure Verification:
+- HTTP middleware uses Slack’s signing secret to verify each HTTP request is genuinely from Slack before any business logic runs.
 
-### Scheduling & Async Processing:
-  - A WeeklyOrderScheduler component, driven by Spring’s @Scheduled, automatically opens and closes threads on configured time.
-  - Long running tasks run in the background, ensuring always acknowledge Slack within their 3 second timeout.
+### Integration Points
+Event Subscription: Processes Slack events including messages, reactions, and app-clickes
+Interactive Components: Handles button clicks and menu selections the interface
+Command Handling: Responds to slash commands for administrative functions
+View Publishing: Dynamically builds and updates Home tab views
 
 
    
