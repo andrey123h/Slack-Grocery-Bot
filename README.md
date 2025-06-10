@@ -42,5 +42,27 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 - Command Handling: Responds to slash commands for administrative functions
 - View Publishing: Dynamically builds and updates Home tab views
 
+## Using GrocFriend: Screenshots & Flows
+
+- Orders
+![orders](https://github.com/user-attachments/assets/bef64b67-ff10-44f7-baa7-c94ada9dd71e)
+
+- Admin summary invoke with more orders and "+1"
+![+1](https://github.com/user-attachments/assets/d1396560-71f4-497f-bb69-e716a078835d)
+
+- DM summary admin invoke
+![DM](https://github.com/user-attachments/assets/81aca1d8-d012-4426-bdb2-1253bf047a27)
+
+- UI
+![UI3](https://github.com/user-attachments/assets/744ad127-2b24-4705-b5f2-7c50701461c6)
+![UI2](https://github.com/user-attachments/assets/75a892d4-f7b4-4fe1-87f4-575d2983abfc)
+![UI1](https://github.com/user-attachments/assets/a3e69f7c-0bcf-41cb-9269-ec26d2175e13)
+
+
+
+
+
+
+
 
    
