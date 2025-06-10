@@ -54,9 +54,11 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 ![DM](https://github.com/user-attachments/assets/81aca1d8-d012-4426-bdb2-1253bf047a27)
 
 - UI
-![UI3](https://github.com/user-attachments/assets/744ad127-2b24-4705-b5f2-7c50701461c6)
-![UI2](https://github.com/user-attachments/assets/75a892d4-f7b4-4fe1-87f4-575d2983abfc)
 ![UI1](https://github.com/user-attachments/assets/a3e69f7c-0bcf-41cb-9269-ec26d2175e13)
+![UI2](https://github.com/user-attachments/assets/75a892d4-f7b4-4fe1-87f4-575d2983abfc)
+![UI3](https://github.com/user-attachments/assets/744ad127-2b24-4705-b5f2-7c50701461c6)
+
+
 
 
 
