@@ -1,5 +1,6 @@
 package com.andreycorp.slack_grocery_bot;
 
+import com.andreycorp.slack_grocery_bot.parsers.OrderParser;
 import org.junit.jupiter.api.Test;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;

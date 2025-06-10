@@ -1,5 +1,11 @@
 package com.andreycorp.slack_grocery_bot;
 
+import com.andreycorp.slack_grocery_bot.Services.SlackMessageService;
+import com.andreycorp.slack_grocery_bot.Services.SummaryService;
+import com.andreycorp.slack_grocery_bot.model.EventStore;
+import com.andreycorp.slack_grocery_bot.model.MessageEvent;
+import com.andreycorp.slack_grocery_bot.model.ReactionEvent;
+import com.andreycorp.slack_grocery_bot.parsers.OrderParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,9 +21,13 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class SummaryServiceTest {
 
-    @Mock SlackMessageService slackMessageService;
-    @Mock OrderParser       orderParser;
-    @Mock EventStore        eventStore;
+    @Mock
+    SlackMessageService slackMessageService;
+    @Mock
+    OrderParser orderParser;
+
+    @Mock
+    EventStore eventStore;
 
     @InjectMocks
     SummaryService summaryService;
