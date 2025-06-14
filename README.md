@@ -4,27 +4,30 @@
 
 
 Leverages the Slack Web API alongside Spring MVC
+integrated two LLM backends, Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API via clear prompt engineering.
 REST controllers for order intake, implements custom Slack slash commands,
 interactive UI, uses Java’s regex for
 parsing free-form message text, and relies on Jackson
 for JSON payload handling. Timed operations are
 handled by Spring Scheduling. Testing with JUnit & Mockito.
 Implementing an HTTP middleware for authentication and validating of Slack signature 
-### In progress: DB, adding deployment pipelines for staging and production, LLM API integration.
+### In progress: multi-tenant database support, adding deployment pipelines for staging and production
 
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
 ### Core Funcullality: 
-- Opens a new thread (Monday morning) in a designated “orders” channel with simple ordering instructions.
+- Opens a new thread (configurable day and time) in a designated “orders” channel with simple ordering instructions.
 - Collects user orders via free form messages (no strict form is require)
 - Allows “+1” reactions on others’ orders to indicate support and popularity of items.
-- Closes the thread later in the week (Thursday afternoon) and posts a formatted summary showing per-user totals and reaction counts.
+- Closes the thread later in the week (configurable day and time) and posts a formatted summary showing per-user totals and reaction counts.
 - Provides admin tools including a slash command to trigger on-demand summaries.
-- Interactive Block Kit UI for managing default item lists.
+- Interactive UI, differant view for user's and admins.
+- LLM generated summaries alongside manual formatted summary
+- Configurable scheduler so workspace admin can choose when to open/close the grocery thread.
 
 ### Admin Features
-- Interactive UI: Block Kit interface for managing default grocery items
+- Interactive UI: Block Kit interface for managing default grocery items and configurable scheduler
 - On-Demand Summaries: Slash command to generate summaries anytime, DM and thread support.
 
 
@@ -42,11 +45,18 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 - Command Handling: Responds to slash commands for administrative functions
 - View Publishing: Dynamically builds and updates Home tab views
 
+ ### LLM Integration 
+ - Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API's integrations for weekly summary generation
+
+
 ## Using GrocFriend: Screenshots & Flows
 
 - Orders
 ![orders](https://github.com/user-attachments/assets/bef64b67-ff10-44f7-baa7-c94ada9dd71e)
 
+- Manual + ChatGPT summary
+![chatsum](https://github.com/user-attachments/assets/06719272-5966-402a-9cc1-671b36adb5b2)
+  
 - Admin summary invoke with more orders and "+1"
 ![+1](https://github.com/user-attachments/assets/d1396560-71f4-497f-bb69-e716a078835d)
 
@@ -54,11 +64,9 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 ![DM](https://github.com/user-attachments/assets/81aca1d8-d012-4426-bdb2-1253bf047a27)
 
 - UI
-![UI1](https://github.com/user-attachments/assets/a3e69f7c-0bcf-41cb-9269-ec26d2175e13)
-![UI2](https://github.com/user-attachments/assets/75a892d4-f7b4-4fe1-87f4-575d2983abfc)
-![UI3](https://github.com/user-attachments/assets/744ad127-2b24-4705-b5f2-7c50701461c6)
-
-
+![admin home](https://github.com/user-attachments/assets/6a60a215-6b0e-4494-8948-1a3f5ed3015f)
+[users home](https://github.com/user-attachments/assets/5696254f-8465-44bb-8abd-a8f1d0e879db)
+![admin home edit](https://github.com/user-attachments/assets/eaf5a89e-828d-4ee4-b170-5d835da764f2)
 
 
 
