@@ -3,7 +3,6 @@ package com.andreycorp.slack_grocery_bot.Services;
 import com.andreycorp.slack_grocery_bot.model.EventStore;
 import com.andreycorp.slack_grocery_bot.model.MessageEvent;
 import com.andreycorp.slack_grocery_bot.model.ReactionEvent;
-//import com.andreycorp.slack_grocery_bot.SlackMessageService;
 import com.andreycorp.slack_grocery_bot.UI.HomeViewBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,13 +34,15 @@ public class SlackEventHandlers {
 
     /**
      * Builds & publishes the Home tab view when a user opens the App Home.
+     * If the user is an admin, shows the admin view with a dashboard. If not, shows user's view.
      */
+
     public void handleAppHomeOpened(JsonNode event) throws IOException {
         String userId = event.get("user").asText();
         boolean isAdmin = slackMessageService.isWorkspaceAdmin(userId);
-
         if (isAdmin) {
             String adminHomeJson = homeViewBuilder.buildAdminHomeJson(defaultGroceryService.listAll());
+            //System.out.println(">>> Home view JSON:\n" + adminHomeJson); //debug only
             slackMessageService.publishHomeView(userId, adminHomeJson);
         } else {
             String userHomeJson = homeViewBuilder.buildUserWelcomeHomeJson();
@@ -53,6 +54,7 @@ public class SlackEventHandlers {
      * Processes messages that mention the bot:
      * records them in the event store and adds a "Completed" reaction.
      */
+
     public void handleMessageEvent(JsonNode event) throws IOException {
         String user    = event.get("user").asText();
         String channel = event.get("channel").asText();

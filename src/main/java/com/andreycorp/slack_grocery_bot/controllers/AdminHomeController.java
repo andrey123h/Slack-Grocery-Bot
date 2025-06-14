@@ -1,7 +1,7 @@
 package com.andreycorp.slack_grocery_bot.controllers;
 
 //import com.andreycorp.slack_grocery_bot.DefaultsInteractionService;
-import com.andreycorp.slack_grocery_bot.Services.DefaultsInteractionService;
+import com.andreycorp.slack_grocery_bot.Services.AdminHomeInteractionService;
 import com.andreycorp.slack_grocery_bot.parsers.SlackRequestParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,13 +19,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/slack")
-public class DefaultsController {
+public class AdminHomeController {
 
-    private final DefaultsInteractionService defaultsInteractionService;
+    private final AdminHomeInteractionService defaultsInteractionService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public DefaultsController(
-            DefaultsInteractionService defaultsInteractionService
+    public AdminHomeController(
+            AdminHomeInteractionService defaultsInteractionService
     ) {
 
         this.defaultsInteractionService = defaultsInteractionService;
