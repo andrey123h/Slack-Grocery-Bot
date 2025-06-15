@@ -51,13 +51,11 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 
 ## Using GrocFriend: Screenshots & Flows
 
-- Orders
-![orders](https://github.com/user-attachments/assets/bef64b67-ff10-44f7-baa7-c94ada9dd71e)
 
 - Manual + ChatGPT summary
 ![chatsum](https://github.com/user-attachments/assets/06719272-5966-402a-9cc1-671b36adb5b2)
   
-- Admin summary invoke with more orders and "+1"
+- Orders, admin summary invoke
 ![+1](https://github.com/user-attachments/assets/d1396560-71f4-497f-bb69-e716a078835d)
 
 - DM summary admin invoke
@@ -65,7 +63,7 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 
 - UI
 ![admin home](https://github.com/user-attachments/assets/6a60a215-6b0e-4494-8948-1a3f5ed3015f)
-[users home](https://github.com/user-attachments/assets/5696254f-8465-44bb-8abd-a8f1d0e879db)
+![users home](https://github.com/user-attachments/assets/d1f50a6e-e5fb-4e25-bc76-1dd41ba791d0)
 ![admin home edit](https://github.com/user-attachments/assets/eaf5a89e-828d-4ee4-b170-5d835da764f2)
 
 
