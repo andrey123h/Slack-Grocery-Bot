@@ -49,25 +49,6 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
  - Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API's integrations for weekly summary generation
 
 
-## Using GrocFriend: Screenshots & Flows
-
-
-- Manual + ChatGPT summary
-![chatsum](https://github.com/user-attachments/assets/06719272-5966-402a-9cc1-671b36adb5b2)
-  
-- Orders, admin summary invoke
-![+1](https://github.com/user-attachments/assets/d1396560-71f4-497f-bb69-e716a078835d)
-
-- DM summary admin invoke
-![DM](https://github.com/user-attachments/assets/81aca1d8-d012-4426-bdb2-1253bf047a27)
-
-- Home tab for admin
-![admin home](https://github.com/user-attachments/assets/6a60a215-6b0e-4494-8948-1a3f5ed3015f)
-![admin home edit](https://github.com/user-attachments/assets/eaf5a89e-828d-4ee4-b170-5d835da764f2)
-
-- Home tab for not-admins
-![users home](https://github.com/user-attachments/assets/d1f50a6e-e5fb-4e25-bc76-1dd41ba791d0)
-
 
 
 
