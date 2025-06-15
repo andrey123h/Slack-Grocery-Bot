@@ -2,16 +2,16 @@
 ## Spring Boot application to manage and automate weekly grocery orders through Slack.
 ![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
 
-
+###
 Leverages the Slack Web API alongside Spring MVC
-integrated two LLM backends, Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API via clear prompt engineering.
+integratedtwo LLM backends, Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API via clear prompt engineering.
 REST controllers for order intake, implements custom Slack slash commands,
 interactive UI, uses Java’s regex for
 parsing free-form message text, and relies on Jackson
 for JSON payload handling. Timed operations are
 handled by Spring Scheduling. Testing with JUnit & Mockito.
 Implementing an HTTP middleware for authentication and validating of Slack signature 
-### In progress: multi-tenant database support, adding deployment pipelines for staging and production
+In progress: deployment on serverless cloud, and implementing multi-tenant database support.
 
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
