@@ -1,5 +1,5 @@
 # GrocFriend
-## Spring Boot application to manage and automate weekly grocery orders through Slack.
+
 ![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
 
 Leverages the Slack Web API alongside Spring MVC
