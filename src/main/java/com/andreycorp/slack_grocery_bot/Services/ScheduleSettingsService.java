@@ -93,25 +93,6 @@ public class ScheduleSettingsService {
         }, new CronTrigger(closeCron, zoneId));
     }
 
-    /** @return configured open-day (e.g. \"MON\") */
-    public String getOpenDay() {
-        return openDay;
-    }
-
-    /** @return configured open-time (HH:mm) */
-    public String getOpenTime() {
-        return openTime;
-    }
-
-    /** @return configured close-day (e.g. \"THU\") */
-    public String getCloseDay() {
-        return closeDay;
-    }
-
-    /** @return configured close-time (HH:mm) */
-    public String getCloseTime() {
-        return closeTime;
-    }
 
     /** just set the new day, don’t reschedule yet, until "apply" clicked  */
     public void updateOpenDay(String newOpenDay) {
@@ -149,5 +130,26 @@ public class ScheduleSettingsService {
     public ScheduleSettings get() {
         return new ScheduleSettings(openDay, openTime, closeDay, closeTime);
     }
+
+    /*
+    // @return configured open-day (e.g. \"MON\")
+    public String getOpenDay() {
+        return openDay;
+    }
+
+    // @return configured open-time (HH:mm)
+    public String getOpenTime() {
+        return openTime;
+    }
+
+    // @return configured close-day (e.g. \"THU\")
+    public String getCloseDay() {
+        return closeDay;
+    }
+
+    // @return configured close-time (HH:mm)
+    public String getCloseTime() {
+        return closeTime;
+    } */
 
 }

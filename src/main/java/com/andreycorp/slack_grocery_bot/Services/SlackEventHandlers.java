@@ -64,7 +64,7 @@ public class SlackEventHandlers {
         MessageEvent me = new MessageEvent(user, channel, text, ts);
         eventStore.saveMessage(me);
 
-        // Acknowledge with a checkmark reaction
+        // Acknowledge  user with a checkmark reaction
         slackMessageService.addReaction(channel, ts, "white_check_mark");
         System.out.printf("Recorded message: %s%n", me);
     }

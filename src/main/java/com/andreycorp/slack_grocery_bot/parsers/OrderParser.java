@@ -32,7 +32,7 @@ public class OrderParser {
             Pattern.compile("^\\s*(\\d+(?:\\.\\d+)?)\\s*(.+)$");
 
     /**
-     * Processes a raw message string (which may include a bot mention and multiple
+     * Processes a raw message string (which include a bot mention and multiple
      * order entries) and returns a list of parsed orders. Each entry is split on
      * commas or semicolons, or on periods that precede a space+digit, and if no leading quantity is found, defaults to 1.
      *

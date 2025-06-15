@@ -9,6 +9,12 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/**
+ * Service for summarizing weekly grocery orders from Slack messages.
+ * Aggregates orders by user, counts reactions, and formats a summary message.
+ */
+
 @Service
 public class SummaryService {
 

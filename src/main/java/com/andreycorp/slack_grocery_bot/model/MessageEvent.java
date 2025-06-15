@@ -8,7 +8,7 @@ package com.andreycorp.slack_grocery_bot.model;
  */
 public record MessageEvent(
         String user, // Slack user ID
-        String channel,
-        String text,
-        String ts
+        String channel, // Channel ID where the message was posted
+        String text, // The text of the message
+        String ts // Timestamp of the message
 ) {}

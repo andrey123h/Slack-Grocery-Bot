@@ -14,11 +14,11 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Controller to handle Slack interactions related to defaults in the UI.
+ *  Controller for handling Slack Home-tab interactions
  */
 
 @RestController
-@RequestMapping("/slack")
+@RequestMapping("/slack/home-tab")
 public class AdminHomeController {
 
     private final AdminHomeInteractionService defaultsInteractionService;
@@ -30,17 +30,16 @@ public class AdminHomeController {
 
         this.defaultsInteractionService = defaultsInteractionService;
     }
-
     /**
-     * Handles Slack block_actions & view_submission for defaults.
+     * Handles Slack block_actions & view_submission
      */
     @PostMapping(
-            path = "/interact/defaults",
+            //path = "/ui/interact",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, // expects URL-encoded form data
             produces = MediaType.TEXT_PLAIN_VALUE // reply with plain text
     )
     public ResponseEntity<String> handleDefaultsInteraction(HttpServletRequest request) throws IOException {
-        //  Retrieve the raw URL-encoded body that the filter cached
+        //  Retrieve the raw URL-encoded body that the filter (middleware) cached
         String rawBody = SlackRequestParser.extractRawBody(request);
 
         //  Parse the form-encoded pairs into a Map
@@ -70,7 +69,7 @@ public class AdminHomeController {
                 // nothing to do for other interaction types
         }
 
-        //  Always ack with an empty 200
+        //  ack with an empty 200
         return ResponseEntity.ok("");
     }
 }

@@ -15,6 +15,14 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Service for sending messages and interacting with Slack API.
+ * Provides methods to send messages, pin messages, open direct message channels,
+ * check user roles, publish Home tab views, open modals, and add reactions.
+ * Centralizes Slack API client creation to avoid redundancy.
+ */
+
+
 @Service
 public class SlackMessageService {
 

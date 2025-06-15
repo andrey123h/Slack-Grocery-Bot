@@ -17,7 +17,7 @@ import java.util.List;
  *  Controller to handle incoming Slack events.
  *  1) URL‐verification (challenge handshake).
  *  2) app_home_opened (publish Home-tab view).
- *  3) app_mention (record order + add reaction).
+ *  3) app_mention (record order + add reaction for use ack).
  *  4) reaction_added (record user reactions).
  */
 
@@ -69,7 +69,7 @@ public class EventsController {
             }
         }
 
-        // reply 200 OK to Slack
+        //  ack  with an empty 200
         return ResponseEntity.ok("");
     }
 

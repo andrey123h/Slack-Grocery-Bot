@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * Handles incoming Slack slash commands for grocery order summaries.
  *  Validates the command and user ID.
  *  Immediately acknowledge response to Slack.
- *  Runs the summary generation asynchronously. Admin check.
+ *  Runs the summary generation asynchronously.
  */
 
 @RestController
