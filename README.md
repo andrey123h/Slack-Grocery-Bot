@@ -38,7 +38,7 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 - ### AI-enhanced Summaries
   LLM generated summaries alongside manual formatted summary
 
-- Customizable Schedule
+- ### Customizable Schedule
    Give admins full control over when the ordering threads open and close via an easy configuration.
 
 - ### Default Item Management
