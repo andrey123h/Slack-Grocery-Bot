@@ -48,12 +48,19 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
  ### LLM Integration 
  - Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API's integrations for weekly summary generation
 
+## Screenshots demo
 
+![orders](https://github.com/user-attachments/assets/948bd91b-719f-4a36-8aa3-de0b213d6c2a)
 
+![admin home](https://github.com/user-attachments/assets/df891eb2-b1e1-4367-9c77-e0855d5aa54b)
 
+![chatsum](https://github.com/user-attachments/assets/29366fee-8a36-4ab8-8825-d8727b433217)
 
+![+1](https://github.com/user-attachments/assets/bb1ec34c-f1fa-425c-b625-8345b94e46a0)
 
+![DM](https://github.com/user-attachments/assets/5d7cc799-28dc-4e45-81a5-bff3e95d12e2)
 
+![admin home edit](https://github.com/user-attachments/assets/005a65bf-77d4-4034-84e4-0776e37cf54a)
 
 
 
