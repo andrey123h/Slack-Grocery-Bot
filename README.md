@@ -15,7 +15,7 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
-### Core Funcullality: 
+# Core Funcullality: 
 - Opens a new thread (configurable day and time) in a designated “orders” channel with simple ordering instructions.
 - Collects user orders via free form messages (no strict form is require)
 - Allows “+1” reactions on others’ orders to indicate support and popularity of items.
