@@ -16,15 +16,32 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
 # Core Funcullality: 
-- Opens a new thread (configurable day and time) in a designated “orders” channel with simple ordering instructions.
-- Collects user orders via free form messages (no strict form is require)
-- Allows “+1” reactions on others’ orders to indicate support and popularity of items.
-- Closes the thread later in the week (configurable day and time) and posts a formatted summary showing per-user totals and reaction counts.
-- Provides admin tools including a slash command to trigger on-demand summaries.
-- Interactive UI, differant view for user's and admins.
-- LLM generated summaries alongside manual formatted summary
-- Configurable scheduler so workspace admin can choose when to open/close the grocery thread.
-- Manageable default grocery items list
+- Scheduled Thread Management
+ Automatically open a new ordering thread each week (at a configurable day & time) in your designated #orders channel with clear instructions.
+
+- Free-form Order Collection
+ Let users submit orders in plain language, in flexible format, capture them directly from the thread.
+
+- Community Voting
+ Enable "thubms up" reactions on any order to signal interest and item popularity.
+
+- Automated Closure & Summary
+ At a configurable day & time later in the week, automatically close the thread and post a neatly formatted summary showing per-user totals alongside reaction counts.
+
+- On-demand Admin Summaries
+ Provide a slash command for workspace admins to trigger instant DM + in-thread summaries whenever needed. 
+
+-Role-specific Interfaces
+ Deliver a streamlined ordering view for regular users and a interactive dashboard for admins.
+
+- AI-enhanced Summaries
+ LLM generated summaries alongside manual formatted summary
+
+- Customizable Schedule
+ Give admins full control over when the ordering threads open and close via an easy configuration.
+
+- Default Item Management
+ Maintain a customizable list of default grocery items that admins can add, edit, or remove.
 
 ### Admin Features
 - Interactive UI: Block Kit interface for managing default grocery items and configurable scheduler
