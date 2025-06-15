@@ -2,7 +2,6 @@
 ## Spring Boot application to manage and automate weekly grocery orders through Slack.
 ![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
 
-###
 Leverages the Slack Web API alongside Spring MVC
 integratedtwo LLM backends, Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API via clear prompt engineering.
 REST controllers for order intake, implements custom Slack slash commands,
