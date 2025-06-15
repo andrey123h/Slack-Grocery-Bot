@@ -16,23 +16,32 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
 # Core Funcullality: 
-- Scheduled Thread Management :Automatically open a new ordering thread each week (at a configurable day & time) in your designated #orders channel with clear instructions.
+- Scheduled Thread Management
+  Automatically open a new ordering thread each week (at a configurable day & time) in your designated #orders channel with clear instructions.
 
-- Free-form Order Collection: Let users submit orders in plain language, in flexible format, capture them directly from the thread.
+- ### Free-form Order Collection
+  Let users submit orders in plain language, in flexible format, capture them directly from the thread.
 
-- Community Voting: Enable "thubms up" reactions on any order to signal interest and item popularity.
+- ### Community Voting
+   Enable "thubms up" reactions on any order to signal interest and item popularity.
 
-- Automated Closure & Summary: At a configurable day & time later in the week, automatically close the thread and post a neatly formatted summary showing per-user totals alongside reaction counts.
+- ### Automated Closure & Summary
+   At a configurable day & time later in the week, automatically close the thread and post a neatly formatted summary showing per-user totals alongside reaction counts.
 
-- On-demand Admin Summaries: Provide a slash command for workspace admins to trigger instant DM + in-thread summaries whenever needed. 
+- ### On-demand Admin Summaries
+   Provide a slash command for workspace admins to trigger instant DM + in-thread summaries whenever needed. 
 
--Role-specific Interfaces: Deliver a streamlined ordering view for regular users and a interactive dashboard for admins.
+- ### Role-specific Interfaces
+Deliver a streamlined ordering view for regular users and a interactive dashboard for admins.
 
-- AI-enhanced Summaries: LLM generated summaries alongside manual formatted summary
+- ### AI-enhanced Summaries
+  LLM generated summaries alongside manual formatted summary
 
-- Customizable Schedule: Give admins full control over when the ordering threads open and close via an easy configuration.
+- Customizable Schedule
+   Give admins full control over when the ordering threads open and close via an easy configuration.
 
-- Default Item Management: Maintain a customizable list of default grocery items that admins can add, edit, or remove.
+- ### Default Item Management
+   Maintain a customizable list of default grocery items that admins can add, edit, or remove.
 
 ### Admin Features
 - Interactive UI: Block Kit interface for managing default grocery items and configurable scheduler
