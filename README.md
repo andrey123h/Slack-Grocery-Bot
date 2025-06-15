@@ -61,10 +61,13 @@ Implementing an HTTP middleware for authentication and validating of Slack signa
 - DM summary admin invoke
 ![DM](https://github.com/user-attachments/assets/81aca1d8-d012-4426-bdb2-1253bf047a27)
 
-- UI
+- Home tab for admin
 ![admin home](https://github.com/user-attachments/assets/6a60a215-6b0e-4494-8948-1a3f5ed3015f)
-![users home](https://github.com/user-attachments/assets/d1f50a6e-e5fb-4e25-bc76-1dd41ba791d0)
 ![admin home edit](https://github.com/user-attachments/assets/eaf5a89e-828d-4ee4-b170-5d835da764f2)
+
+- Home tab for not-admins
+![users home](https://github.com/user-attachments/assets/d1f50a6e-e5fb-4e25-bc76-1dd41ba791d0)
+
 
 
 
