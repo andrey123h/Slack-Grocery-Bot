@@ -16,7 +16,8 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
 # Core Funcullality: 
-- Scheduled Thread Management
+
+- ### Scheduled Thread Management
   Automatically open a new ordering thread each week (at a configurable day & time) in your designated #orders channel with clear instructions.
 
 - ### Free-form Order Collection
@@ -42,6 +43,8 @@ Deliver a streamlined ordering view for regular users and a interactive dashboar
 
 - ### Default Item Management
    Maintain a customizable list of default grocery items that admins can add, edit, or remove.
+
+
 
 ### Admin Features
 - Interactive UI: Block Kit interface for managing default grocery items and configurable scheduler
