@@ -33,7 +33,7 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
    Provide a slash command for workspace admins to trigger instant DM + in-thread summaries whenever needed. 
 
 - ### Role-specific Interfaces
-Deliver a streamlined ordering view for regular users and a interactive dashboard for admins.
+  Deliver a streamlined ordering view for regular users and a interactive dashboard for admins.
 
 - ### AI-enhanced Summaries
   LLM generated summaries alongside manual formatted summary
