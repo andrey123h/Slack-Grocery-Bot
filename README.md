@@ -24,6 +24,7 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 - Interactive UI, differant view for user's and admins.
 - LLM generated summaries alongside manual formatted summary
 - Configurable scheduler so workspace admin can choose when to open/close the grocery thread.
+- Manageable default grocery items list
 
 ### Admin Features
 - Interactive UI: Block Kit interface for managing default grocery items and configurable scheduler
