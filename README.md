@@ -70,7 +70,7 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 
 ## Screenshots demo
 
-![orders](https://github.com/user-attachments/assets/948bd91b-719f-4a36-8aa3-de0b213d6c2a)
+![2 members](https://github.com/user-attachments/assets/01785016-2aec-4cf0-bf1a-f1ee963c474a)
 
 ![admin home](https://github.com/user-attachments/assets/df891eb2-b1e1-4367-9c77-e0855d5aa54b)
 
@@ -82,6 +82,7 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 
 ![admin home edit](https://github.com/user-attachments/assets/005a65bf-77d4-4034-84e4-0776e37cf54a)
 
+![generating](https://github.com/user-attachments/assets/880fa90b-3157-4f40-9cb2-83be0e4c8bc2)
 
 
    
