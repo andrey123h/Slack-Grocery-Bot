@@ -5,7 +5,7 @@
 Leverages the Slack Web API alongside Spring MVC, integrated
 two LLM backends, Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API via clear prompt engineering.
 REST controllers for order intake, implements custom Slack slash commands,
-interactive UI, uses Java’s regex for
+interactive UI via Slack Block Kit, uses Java’s regex for
 parsing free-form message text, and relies on Jackson
 for JSON payload handling. Timed operations are
 handled by Spring Scheduling. Testing with JUnit & Mockito.
