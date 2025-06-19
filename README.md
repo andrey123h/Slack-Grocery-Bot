@@ -12,7 +12,7 @@ handled by Spring Scheduling. Testing with JUnit & Mockito.
 Implementing an HTTP middleware for authentication and validating of Slack signature 
 In progress: deployment on serverless cloud, and implementing multi-tenant database support.
 
-## Always updating (work in progress, consistently) :)
+## Always updating, work in progress consistently :)
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
