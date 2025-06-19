@@ -17,6 +17,9 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 
 # Core Funcullality: 
 
+- ### Multi-tenant support
+   Serve multiple Slack workspaces (tenants) from a single codebase: isolate per-workspace data in PostgreSQL, dynamically retrieve each workspace’s OAuth token, and scope all database queries and API calls to the current workspace context via a request-scoped tenant context.
+
 - ### Scheduled Thread Management
   Automatically open a new ordering thread each week (at a configurable day & time) in your designated #orders channel with clear instructions.
 
