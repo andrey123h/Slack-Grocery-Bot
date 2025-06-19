@@ -9,6 +9,7 @@ interactive UI via Slack Block Kit, uses Java’s regex for
 parsing free-form message text, and relies on Jackson
 for JSON payload handling. Timed operations are
 handled by Spring Scheduling. Testing with JUnit & Mockito.
+Database - PostgreSQL with multi-tenant data isolation, accessed via Spring JDBC
 Implementing an HTTP middleware for authentication and validating of Slack signature 
 In progress: deployment on serverless cloud, and implementing multi-tenant database support.
 
