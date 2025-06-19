@@ -2,6 +2,7 @@ package com.andreycorp.slack_grocery_bot.controllers;
 
 import com.andreycorp.slack_grocery_bot.*;
 import com.andreycorp.slack_grocery_bot.Services.SlackEventHandlers;
+import com.andreycorp.slack_grocery_bot.context.TenantContext;
 import com.andreycorp.slack_grocery_bot.model.EventStore;
 import com.andreycorp.slack_grocery_bot.parsers.SlackRequestParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,13 +28,15 @@ public class EventsController {
     private final SlackEventHandlers handlers;
     private final EventStore eventStore;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final TenantContext tenantContext;
 
     public EventsController(
             SlackEventHandlers handlers,
-            EventStore eventStore
+            EventStore eventStore, TenantContext tenantContext
     ) {
         this.handlers = handlers;
         this.eventStore = eventStore;
+        this.tenantContext = tenantContext;
     }
 
     @PostMapping(
@@ -44,25 +47,35 @@ public class EventsController {
         // extracting and parsing JSON body that filter cached
         JsonNode payload = SlackRequestParser.parseJsonBody(request, objectMapper);
         String type = SlackRequestParser.extractJsonType(payload);
+
+        //String teamId = payload.get("team_id").asText(); // extract team ID from payload
+        /// *** Set tenant context for this request ***
+        //enantContext.setTeamId(teamId);
+
+
         //  URL verification handshake
         if ("url_verification".equals(type)) {
-            return ResponseEntity.ok(payload.get("challenge").asText());
+            String challenge = payload.get("challenge").asText();
+            return ResponseEntity.ok(challenge);
         }
 
         //  Incoming event callbacks
         if ("event_callback".equals(type)) {
+            // Extract and set tenant context only for real events
+            String teamId = payload.get("team_id").asText(); // extract team ID from payload
+            tenantContext.setTeamId(teamId);
             JsonNode event = payload.get("event");
             String eventType = event.get("type").asText();
 
             switch (eventType) {
                 case "app_home_opened":
-                    handlers.handleAppHomeOpened(event);
+                    handlers.handleAppHomeOpened(event); // publish Home-tab view
                     break;
                 case "app_mention":
-                    handlers.handleMessageEvent(event);
+                    handlers.handleMessageEvent(event); // record order + add reaction for user acknowledgment
                     break;
                 case "reaction_added":
-                    handlers.handleReactionAdded(event);
+                    handlers.handleReactionAdded(event); // record user reactions
                     break;
                 default:
                     // ignore other event types

@@ -7,6 +7,7 @@ package com.andreycorp.slack_grocery_bot.model;
  * that we store for later summarization.
  */
 public record MessageEvent(
+        String teamId, // Slack team ID of where the message was posted
         String user, // Slack user ID
         String channel, // Channel ID where the message was posted
         String text, // The text of the message

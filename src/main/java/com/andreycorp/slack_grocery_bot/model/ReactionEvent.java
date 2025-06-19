@@ -5,6 +5,7 @@ package com.andreycorp.slack_grocery_bot.model;
  * Represents a Slack "reaction_added" event
  */
 public record ReactionEvent(
+        String teamId, // Slack team ID.  where added the reaction.
         String user, // Slack user ID.  who added the reaction.
         String reaction, //  the reaction name ( "+1", "heart", etc.)
         String channel, //  channel ID. in which the reacted‐to message lives

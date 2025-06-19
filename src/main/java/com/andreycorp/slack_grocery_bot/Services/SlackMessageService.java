@@ -1,5 +1,7 @@
 package com.andreycorp.slack_grocery_bot.Services;
 
+import com.andreycorp.slack_grocery_bot.context.TenantContext;
+import com.andreycorp.slack_grocery_bot.jdbc.JdbcWorkspaceService;
 import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.SlackApiException;
@@ -20,23 +22,34 @@ import java.util.List;
  * Provides methods to send messages, pin messages, open direct message channels,
  * check user roles, publish Home tab views, open modals, and add reactions.
  * Centralizes Slack API client creation to avoid redundancy.
+ * all methods are tenant-aware, using the current team ID from TenantContext.
  */
 
 
 @Service
 public class SlackMessageService {
 
-    @Value("${slack.bot.token}")
+    //@Value("${slack.bot.token}") // as now switched to  multi-tenant context
     private String botToken;
+    private final TenantContext tenantContext;
+    private final JdbcWorkspaceService jdcbWorkspaceService;
+
+    public SlackMessageService(TenantContext tenantContext, JdbcWorkspaceService jdcbWorkspaceService) {
+        this.tenantContext = tenantContext;
+        this.jdcbWorkspaceService = jdcbWorkspaceService;
+    }
 
     /**
      * Returns a MethodsClient instance for making Slack API calls.
      * This client is configured with the bot token from application properties.
+     * * The bot token is retrieved based on the current tenant context (team ID).
      * centralizes here to avoid repeating in every method.
      */
 
     private MethodsClient client() {
-        return Slack.getInstance().methods(botToken);
+        String teamId = tenantContext.getTeamId();
+        String token = jdcbWorkspaceService.getBotToken(teamId);
+        return Slack.getInstance().methods(token);
     }
 
     /**

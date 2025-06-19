@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * It uses CopyOnWriteArrayList to ensure thread safety for concurrent access.
  */
 
-@Service
+// @Service
 public class EventStoreService implements EventStore {
     private final CopyOnWriteArrayList<MessageEvent> messages = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<ReactionEvent> reactions = new CopyOnWriteArrayList<>();
