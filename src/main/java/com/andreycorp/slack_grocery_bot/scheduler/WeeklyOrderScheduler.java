@@ -31,7 +31,7 @@ public class WeeklyOrderScheduler {
             EventStore eventStore,
             SummaryService summaryService,
             AISummaryService aiSummaryService,
-            @Value("${slack.order.channel}") String orderChannel,
+            @Value("${slack.order.channel}") String orderChannel, // #office-grocery same for all tenants
             @Value("${slack.admin.channel:}") String adminChannel
     ) {
         this.slackMessageService   = slackMessageService;
@@ -74,10 +74,14 @@ public class WeeklyOrderScheduler {
         /** manual summary */
         summaryService.summarizeThread(orderChannel, currentThreadTs, threadMsgs, adminChannel);
 
-        // Deepseek (Ollama) and ChatGPT summaries
-        //aiSummaryService.postDeepseekSummary(threadMsgs, currentThreadTs);
-        aiSummaryService.postChatGptSummary(threadMsgs, currentThreadTs);
+        // ---- Deepseek (Ollama) and ChatGPT summaries ----
+        ///aiSummaryService.postDeepseekSummary(threadMsgs, currentThreadTs);
+        ///aiSummaryService.postChatGptSummary(threadMsgs, currentThreadTs);
 
+
+
+        // Prune all past events for this workspace so history is cleared
+        eventStore.pruneEventsBefore(currentThreadTs);
         // Reset the current thread timestamp for closing
         currentThreadTs = null;
     }

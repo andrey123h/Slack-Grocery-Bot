@@ -2,6 +2,7 @@ package com.andreycorp.slack_grocery_bot.Services;
 
 import com.andreycorp.slack_grocery_bot.UI.HomeViewBuilder;
 import com.andreycorp.slack_grocery_bot.UI.ViewPayloads;
+import com.andreycorp.slack_grocery_bot.Services.SummaryService;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.util.Map;
  *  • Schedule pickers for open/close day & time
  *  • “Save schedule” button
  *  • Default-item buttons & overflow menu
+ *  • Real-time summary injection
  */
 @Service
 public class AdminHomeInteractionService {
@@ -21,17 +23,20 @@ public class AdminHomeInteractionService {
     private final DefaultsStoreService     defaultGroceryService;
     private final HomeViewBuilder          homeViewBuilder;
     private final ScheduleSettingsService  scheduleSettingsService;
+    private final SummaryService           summaryService;
 
     public AdminHomeInteractionService(
             SlackMessageService      slackMessageService,
             DefaultsStoreService     defaultGroceryService,
             HomeViewBuilder          homeViewBuilder,
-            ScheduleSettingsService  scheduleSettingsService
+            ScheduleSettingsService  scheduleSettingsService,
+            SummaryService           summaryService
     ) {
         this.slackMessageService     = slackMessageService;
         this.defaultGroceryService   = defaultGroceryService;
         this.homeViewBuilder         = homeViewBuilder;
         this.scheduleSettingsService = scheduleSettingsService;
+        this.summaryService          = summaryService;
     }
 
     /**
@@ -73,16 +78,15 @@ public class AdminHomeInteractionService {
                 break;
 
             case "save_schedule":
-                //  persist & re-render the Home tab
-                String full = homeViewBuilder.buildAdminHomeJson(
-                        defaultGroceryService.listAll()
-                );
+                // persist & re-render the Admin Home
+                Map<String,Integer> defaults = defaultGroceryService.listAll();
+                String summaryMd = summaryService.generateSummaryMarkdown();
+                String full = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
                 slackMessageService.publishHomeView(userId, full);
 
-                //  now actually re-schedule the open/close jobs
+                // now actually re-schedule the open/close jobs
                 scheduleSettingsService.apply();
                 return;
-
 
             // --- Default-item actions ---
             case "add_default":
@@ -99,7 +103,7 @@ public class AdminHomeInteractionService {
                 } else {
                     int qty = defaultGroceryService.listAll().getOrDefault(itemName, 1);
                     String prefilled = buildPrefilledModal(itemName, qty);
-                    String trigger = payload.get("trigger_id").asText();
+                    String trigger   = payload.get("trigger_id").asText();
                     slackMessageService.openModal(trigger, prefilled);
                     return;
                 }
@@ -109,9 +113,10 @@ public class AdminHomeInteractionService {
                 // ignore any other actions
         }
 
-        // After any schedule‐change or default deletion, re-publish the Admin Home
+        // After any schedule-change or default deletion, re-publish the Admin Home
         Map<String,Integer> defaults = defaultGroceryService.listAll();
-        String homeJson = homeViewBuilder.buildAdminHomeJson(defaults);
+        String summaryMd = summaryService.generateSummaryMarkdown();
+        String homeJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
         slackMessageService.publishHomeView(userId, homeJson);
     }
 
@@ -142,7 +147,9 @@ public class AdminHomeInteractionService {
         }
 
         String userId = payload.get("user").get("id").asText();
-        String homeJson = homeViewBuilder.buildAdminHomeJson(defaultGroceryService.listAll());
+        Map<String,Integer> defaults = defaultGroceryService.listAll();
+        String summaryMd = summaryService.generateSummaryMarkdown();
+        String homeJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
         slackMessageService.publishHomeView(userId, homeJson);
     }
 

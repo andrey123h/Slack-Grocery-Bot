@@ -17,12 +17,12 @@ import java.util.List;
 
 @Repository
 public class JdbcEventStoreService implements EventStore {
-    private final DataSource ds; // DataSource for database connections
-    private final TenantContext tenantContext; // Context for tenant (workspace) information
+    private final DataSource ds;
+    private final TenantContext tenantContext;
 
     public JdbcEventStoreService(DataSource ds, TenantContext tenantContext) {
         this.ds = ds;
-        this.tenantContext = tenantContext;
+        this.tenantContext = tenantContext; // holds the current workspace ID
     }
 
     @Override

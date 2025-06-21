@@ -1,5 +1,6 @@
 package com.andreycorp.slack_grocery_bot.Services;
 
+
 import com.andreycorp.slack_grocery_bot.model.EventStore;
 import com.andreycorp.slack_grocery_bot.model.MessageEvent;
 import com.andreycorp.slack_grocery_bot.model.ReactionEvent;
@@ -7,9 +8,12 @@ import com.andreycorp.slack_grocery_bot.UI.HomeViewBuilder;
 import com.andreycorp.slack_grocery_bot.context.TenantContext;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Centralizes handling of Slack event callbacks.
@@ -22,43 +26,41 @@ public class SlackEventHandlers {
     private final HomeViewBuilder homeViewBuilder;
     private final EventStore eventStore;
     private final TenantContext tenantContext;
+    private final SummaryService summaryService;
+    @Value("${slack.admin.channel:}") String adminChannel;
 
     public SlackEventHandlers(
             SlackMessageService slackMessageService,
             DefaultsStoreService defaultGroceryService,
             HomeViewBuilder homeViewBuilder,
-            EventStore eventStore, TenantContext tenantContext
+            EventStore eventStore, TenantContext tenantContext, SummaryService summaryService
     ) {
         this.slackMessageService = slackMessageService;
         this.defaultGroceryService = defaultGroceryService;
         this.homeViewBuilder = homeViewBuilder;
         this.eventStore = eventStore;
         this.tenantContext = tenantContext;
+        this.summaryService = summaryService;
     }
 
     /**
      * Builds & publishes the Home tab view when a user opens the App Home.
      * Scopes defaults and admin check to the current workspace (tenant).
+     * ith real-time summary
      */
+
+
     public void handleAppHomeOpened(JsonNode event) throws IOException {
-
-       // String teamId = tenantContext.getTeamId();
-
-        //  Who opened the Home
         String userId = event.get("user").asText();
-
-        // Check admin status in current workspace
         boolean isAdmin = slackMessageService.isWorkspaceAdmin(userId);
-
-        if (isAdmin) {
-            //  Load this workspace's default grocery items
+        // Generate current workspace summary
+        String summaryMd = summaryService.generateSummaryMarkdown();
+        if (!isAdmin) {
             Map<String, Integer> defaults = defaultGroceryService.listAll();
-            //  Build and publish admin view
-            String adminHomeJson = homeViewBuilder.buildAdminHomeJson(defaults);
+            String adminHomeJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
             slackMessageService.publishHomeView(userId, adminHomeJson);
         } else {
-            //  Build and publish user welcome view
-            String userHomeJson = homeViewBuilder.buildUserWelcomeHomeJson();
+            String userHomeJson = homeViewBuilder.buildUserWelcomeHomeJson(summaryMd);
             slackMessageService.publishHomeView(userId, userHomeJson);
         }
     }
@@ -66,6 +68,7 @@ public class SlackEventHandlers {
     /**
      * Processes messages that mention the bot:
      * records them in the event store and adds a "Completed" reaction for user  acknowledgment.
+     * updates the Home tab
      */
 
     public void handleMessageEvent(JsonNode event) throws IOException {
@@ -85,6 +88,18 @@ public class SlackEventHandlers {
         // acknowledge with a checkmark reaction
         slackMessageService.addReaction(channel, ts, "white_check_mark");
         System.out.printf("Recorded message: %s%n", me); // debug log
+
+        // After each new order, rebuild and republish Home tab for this user
+        String summaryMd = summaryService.generateSummaryMarkdown();
+        boolean isAdmin  = slackMessageService.isWorkspaceAdmin(user);
+        String homeJson;
+        if (isAdmin) {
+            Map<String, Integer> defaults = defaultGroceryService.listAll();
+            homeJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
+        } else {
+            homeJson = homeViewBuilder.buildUserWelcomeHomeJson(summaryMd);
+        }
+        slackMessageService.publishHomeView(user, homeJson);
     }
 
     /**

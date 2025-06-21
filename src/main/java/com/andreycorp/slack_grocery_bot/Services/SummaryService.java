@@ -32,6 +32,27 @@ public class SummaryService {
         this.eventStore = eventStore;
     }
 
+        // ----
+    /**
+     * Pulls every order & +1 reaction in *this* workspace and
+     * returns a Markdown summary.
+     *
+     */
+    public String generateSummaryMarkdown() {
+        //  fetch all messages for this tenant
+        List<MessageEvent> msgs = eventStore.fetchMessagesSince("0");
+        // parse orders
+        OrderSummaryData data = processMessageEvents(msgs);
+        //  fetch +1 reactions
+        Map<String, Long> plusOnes = eventStore.fetchReactionsSince("0").stream()
+                .filter(r -> "+1".equals(r.reaction()))
+                .collect(Collectors.groupingBy(ReactionEvent::ts, Collectors.counting()));
+        //  render
+        return buildSummaryText(data, plusOnes);
+    }
+    // ----
+
+
     /**
      * Aggregates a list of MessageEvent into a summary text (including reaction counts)
      * and posts it to Slack.

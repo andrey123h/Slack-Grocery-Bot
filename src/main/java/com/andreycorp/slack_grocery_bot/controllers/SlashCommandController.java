@@ -1,6 +1,6 @@
 package com.andreycorp.slack_grocery_bot.controllers;
 
-import com.andreycorp.slack_grocery_bot.*;
+import com.andreycorp.slack_grocery_bot.context.TenantContext;
 import com.andreycorp.slack_grocery_bot.Services.SlackMessageService;
 import com.andreycorp.slack_grocery_bot.Services.SummaryService;
 import com.andreycorp.slack_grocery_bot.model.EventStore;
@@ -25,28 +25,33 @@ import java.util.stream.Collectors;
  *  Runs the summary generation asynchronously.
  */
 
+
+// ---- out of use for now ----
+
 @RestController
 @RequestMapping("/slack/commands")
 public class SlashCommandController {
 
-    @Value("${slack.order.channel}")
+    @Value("${slack.order.channel}") // #grocery-orders
     private String orderChannel;
 
     private final WeeklyOrderScheduler scheduler;
     private final EventStore eventStore;
     private final SummaryService summaryService;
     private final SlackMessageService slackMessageService;
+    private final TenantContext tenantContext;
 
     public SlashCommandController(
             WeeklyOrderScheduler scheduler,
             EventStore eventStore,
             SummaryService summaryService,
-            SlackMessageService slackMessageService
+            SlackMessageService slackMessageService, TenantContext tenantContext
     ) {
         this.scheduler = scheduler;
         this.eventStore = eventStore;
         this.summaryService = summaryService;
         this.slackMessageService = slackMessageService;
+        this.tenantContext = tenantContext;
     }
 
     @PostMapping(
@@ -58,8 +63,11 @@ public class SlashCommandController {
         String rawBody = SlackRequestParser.extractRawBody(request);
         Map<String,String> params = SlackRequestParser.parseFormUrlEncoded(rawBody);
 
-        String command = params.get("command");
+        // not using the request's tenant context in this controller.
+        // Request scopes don’t survive into background threads
+        String teamId  = params.get("team_id");
         String userId  = params.get("user_id");
+        String command = params.get("command");
 
         // Check for required parameters and command validity
         ResponseEntity<String> error = validateSlashCommand(command, userId);
@@ -69,7 +77,7 @@ public class SlashCommandController {
 
         // 5) Immediate ack
         ResponseEntity<String> ack = ResponseEntity.ok(
-                "📨 Got it! Generating your summary.."
+                "Generating your summary.."
         );
 
         // 6) Heavy work off the HTTP thread

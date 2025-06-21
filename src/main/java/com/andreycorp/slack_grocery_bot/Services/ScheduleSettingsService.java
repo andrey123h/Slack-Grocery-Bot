@@ -1,5 +1,7 @@
 package com.andreycorp.slack_grocery_bot.Services;
 
+import com.andreycorp.slack_grocery_bot.context.TenantContext;
+import com.andreycorp.slack_grocery_bot.jdbc.JdbcScheduleSettingsService;
 import com.andreycorp.slack_grocery_bot.model.ScheduleSettings;
 import com.andreycorp.slack_grocery_bot.scheduler.WeeklyOrderScheduler;
 import jakarta.annotation.PostConstruct;
@@ -7,149 +9,200 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 /**
- * Service that holds the admin-configured schedule settings
- * (day-of-week + time for opening/closing the grocery order thread),
- * and programmatically schedules the WeeklyOrderScheduler jobs
- * via CronTriggers. Allows batching of picker changes until an explicit
- * 'apply()' call.
+ * Service that manages scheduling of the weekly order thread for each workspace (tenant).
+ *
+ * On startup, it loads all tenant IDs and schedules open/close tasks per tenant.
+ * When an admin updates their schedule pickers, it persists to the DB and reschedules only that tenant's jobs.
  */
-
 @Service
 public class ScheduleSettingsService {
 
-    //Time-zone for all triggers
-    private static final String JERUSALEM_ZONE      = "Asia/Jerusalem";
-    // Defaults used on startup if admin hasn’t changed anything
-    private static final String DEFAULT_OPEN_DAY    = "MON";
-    private static final String DEFAULT_CLOSE_DAY   = "THU";
-    private static final String DEFAULT_OPEN_TIME   = "09:00";
-    private static final String DEFAULT_CLOSE_TIME  = "17:00";
+    private static final String JERUSALEM_ZONE     = "Asia/Jerusalem";
+    private static final String DEFAULT_OPEN_DAY   = "MON";
+    private static final String DEFAULT_CLOSE_DAY  = "THU";
+    private static final String DEFAULT_OPEN_TIME  = "09:00";
+    private static final String DEFAULT_CLOSE_TIME = "17:00";
 
-    private final TaskScheduler        taskScheduler; // Spring’s TaskScheduler (backed by a ThreadPoolTaskScheduler)
-    private final WeeklyOrderScheduler weeklyOrderScheduler; // Runs the actual Slack thread open/close logic
-    private final ZoneId               zoneId = ZoneId.of(JERUSALEM_ZONE);
+    private final TaskScheduler                taskScheduler;
+    private final WeeklyOrderScheduler         weeklyOrderScheduler;
+    private final JdbcScheduleSettingsService  dao;
+    private final TenantContext                tenantContext;
+    private final ZoneId                       zoneId = ZoneId.of(JERUSALEM_ZONE);
 
-    // Current schedule settings, initialized to defaults.
-    private String openDay   = DEFAULT_OPEN_DAY;
-    private String openTime  = DEFAULT_OPEN_TIME;
-    private String closeDay  = DEFAULT_CLOSE_DAY;
-    private String closeTime = DEFAULT_CLOSE_TIME;
-    // Scheduled futures for the open/close jobs, allowing cancellation/rescheduling
-    private ScheduledFuture<?> openFuture;
-    private ScheduledFuture<?> closeFuture;
+    // Track scheduled jobs per tenant
+    private final Map<String, ScheduledFuture<?>> openJobs  = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledFuture<?>> closeJobs = new ConcurrentHashMap<>();
 
-    public ScheduleSettingsService(TaskScheduler taskScheduler,
-                                   WeeklyOrderScheduler weeklyOrderScheduler) {
+    public ScheduleSettingsService(
+            TaskScheduler taskScheduler,
+            WeeklyOrderScheduler weeklyOrderScheduler,
+            JdbcScheduleSettingsService dao,
+            TenantContext tenantContext
+    ) {
         this.taskScheduler        = taskScheduler;
         this.weeklyOrderScheduler = weeklyOrderScheduler;
+        this.dao                  = dao;
+        this.tenantContext        = tenantContext;
     }
 
     @PostConstruct
     public void init() {
-        scheduleTasks(); //  On application startup, schedule with the defaults
+        // Schedule jobs for every workspace in the database
+        List<String> teamIds = dao.findAllTeamIds();
+        for (String teamId : teamIds) {
+            scheduleForTenant(teamId);
+        }
     }
 
     /**
-     * Cancels any previously scheduled open/close jobs
-     * and re-registers them with new CronTriggers based on
-     * the current in-memory day/time values.
+     * Load schedule settings for the given tenant and (re)register Cron jobs.
+     * Uses explicit-tenant DAO methods—never touches tenantContext here.
      */
+    private synchronized void scheduleForTenant(String teamId) {
+        // Cancel any existing jobs
+        ScheduledFuture<?> oldOpen = openJobs.remove(teamId);
+        if (oldOpen != null) oldOpen.cancel(false);
+        ScheduledFuture<?> oldClose = closeJobs.remove(teamId);
+        if (oldClose != null) oldClose.cancel(false);
 
-    private synchronized void scheduleTasks() {
-        // Cancel any existing scheduled tasks
-        if (openFuture  != null) openFuture.cancel(false);
-        if (closeFuture != null) closeFuture.cancel(false);
+        // Fetch settings for this tenant (or fall back to defaults)
+        ScheduleSettings s = dao.findByTeamId(teamId);
+        if (s == null) {
+            s = new ScheduleSettings(
+                    DEFAULT_OPEN_DAY, DEFAULT_OPEN_TIME,
+                    DEFAULT_CLOSE_DAY, DEFAULT_CLOSE_TIME
+            );
+        }
 
-        // Schedule open-thread
-        String[] ot = openTime.split(":");
-        int oh = Integer.parseInt(ot[0]);
-        int om = Integer.parseInt(ot[1]);
-        // Convert openDay to a cron-compatible format (e.g. "MON" -> "MONDAY")
-        String openCron = String.format("0 %d %d * * %s", om, oh, openDay);
-        // Schedule that job, capturing its ScheduledFuture so we can cancel it later
-        openFuture = taskScheduler.schedule(() -> {
+        // Schedule open-thread job
+        String[] ot = s.getOpenTime().split(":");
+        int oh = Integer.parseInt(ot[0]), om = Integer.parseInt(ot[1]);
+        String openCron = String.format("0 %d %d * * %s", om, oh, s.getOpenDay());
+        ScheduledFuture<?> openFuture = taskScheduler.schedule(() -> {
+            tenantContext.setTeamId(teamId);
             try {
                 weeklyOrderScheduler.openOrderThread();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }, new CronTrigger(openCron, zoneId));
+        openJobs.put(teamId, openFuture);
 
-        // Schedule close-thread
-        String[] ct = closeTime.split(":");
-        int   ch = Integer.parseInt(ct[0]);
-        int   cm = Integer.parseInt(ct[1]);
-        String closeCron = String.format("0 %d %d * * %s", cm, ch, closeDay);
-        closeFuture = taskScheduler.schedule(() -> {
+        // Schedule close-thread job
+        String[] ct = s.getCloseTime().split(":");
+        int ch = Integer.parseInt(ct[0]), cm = Integer.parseInt(ct[1]);
+        String closeCron = String.format("0 %d %d * * %s", cm, ch, s.getCloseDay());
+        ScheduledFuture<?> closeFuture = taskScheduler.schedule(() -> {
+            tenantContext.setTeamId(teamId);
             try {
                 weeklyOrderScheduler.closeOrderThread();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }, new CronTrigger(closeCron, zoneId));
-    }
-
-
-    /** just set the new day, don’t reschedule yet, until "apply" clicked  */
-    public void updateOpenDay(String newOpenDay) {
-        this.openDay = newOpenDay;
-        //scheduleTasks();
-    }
-
-    /** just set the new day, don’t reschedule yet, until "apply" clicked  */
-    public void updateOpenTime(String newOpenTime) {
-        this.openTime = newOpenTime;
-        //scheduleTasks();
-    }
-
-    /** just set the new day, don’t reschedule yet, until "apply" clicked  */
-    public void updateCloseDay(String newCloseDay) {
-        this.closeDay = newCloseDay;
-        //scheduleTasks();
-    }
-    /** just set the new day, don’t reschedule yet, until "apply" clicked  */
-    public void updateCloseTime(String newCloseTime) {
-        this.closeTime = newCloseTime;
-       // scheduleTasks();
-    }
-
-
-    /** this is called when the admin clicks "apply" */
-    public synchronized void apply() {
-        scheduleTasks();
+        closeJobs.put(teamId, closeFuture);
     }
 
     /**
-     * Return the current schedule settings model
-     * open/close day & time for rendering the Home tab
+     * Returns current settings for rendering Home-tab pickers, with defaults if none in DB.
      */
     public ScheduleSettings get() {
-        return new ScheduleSettings(openDay, openTime, closeDay, closeTime);
+        String teamId = tenantContext.getTeamId();
+        ScheduleSettings s = dao.findByTeamId(teamId);
+        if (s == null) {
+            s = new ScheduleSettings(
+                    DEFAULT_OPEN_DAY, DEFAULT_OPEN_TIME,
+                    DEFAULT_CLOSE_DAY, DEFAULT_CLOSE_TIME
+            );
+        }
+        return s;
     }
 
-    /*
-    // @return configured open-day (e.g. \"MON\")
-    public String getOpenDay() {
-        return openDay;
+    /**
+     * Update open-day for the current tenant, persist and reschedule.
+     */
+    public void updateOpenDay(String newOpenDay) {
+        String teamId = tenantContext.getTeamId();
+        ScheduleSettings old = get();
+        dao.upsert(
+                teamId,
+                newOpenDay,
+                LocalTime.parse(old.getOpenTime()),
+                old.getCloseDay(),
+                LocalTime.parse(old.getCloseTime())
+        );
+        scheduleForTenant(teamId);
     }
 
-    // @return configured open-time (HH:mm)
-    public String getOpenTime() {
-        return openTime;
+    /**
+     * Update open-time for the current tenant, persist and reschedule.
+     */
+    public void updateOpenTime(String newOpenTime) {
+        String teamId = tenantContext.getTeamId();
+        ScheduleSettings old = get();
+        dao.upsert(
+                teamId,
+                old.getOpenDay(),
+                LocalTime.parse(newOpenTime),
+                old.getCloseDay(),
+                LocalTime.parse(old.getCloseTime())
+        );
+        scheduleForTenant(teamId);
     }
 
-    // @return configured close-day (e.g. \"THU\")
-    public String getCloseDay() {
-        return closeDay;
+    /**
+     * Update close-day for the current tenant, persist and reschedule.
+     */
+    public void updateCloseDay(String newCloseDay) {
+        String teamId = tenantContext.getTeamId();
+        ScheduleSettings old = get();
+        dao.upsert(
+                teamId,
+                old.getOpenDay(),
+                LocalTime.parse(old.getOpenTime()),
+                newCloseDay,
+                LocalTime.parse(old.getCloseTime())
+        );
+        scheduleForTenant(teamId);
     }
 
-    // @return configured close-time (HH:mm)
-    public String getCloseTime() {
-        return closeTime;
-    } */
+    /**
+     * Update close-time for the current tenant, persist and reschedule.
+     */
+    public void updateCloseTime(String newCloseTime) {
+        String teamId = tenantContext.getTeamId();
+        ScheduleSettings old = get();
+        dao.upsert(
+                teamId,
+                old.getOpenDay(),
+                LocalTime.parse(old.getOpenTime()),
+                old.getCloseDay(),
+                LocalTime.parse(newCloseTime)
+        );
+        scheduleForTenant(teamId);
+    }
 
+    /**
+     * Persist the current DB settings for this tenant & reschedule.
+     */
+    public synchronized void apply() {
+        String teamId = tenantContext.getTeamId();
+        ScheduleSettings s = get();
+        dao.upsert(
+                teamId,
+                s.getOpenDay(),
+                LocalTime.parse(s.getOpenTime()),
+                s.getCloseDay(),
+                LocalTime.parse(s.getCloseTime())
+        );
+        scheduleForTenant(teamId);
+    }
 }

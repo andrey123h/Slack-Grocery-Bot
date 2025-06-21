@@ -48,10 +48,6 @@ public class EventsController {
         JsonNode payload = SlackRequestParser.parseJsonBody(request, objectMapper);
         String type = SlackRequestParser.extractJsonType(payload);
 
-        //String teamId = payload.get("team_id").asText(); // extract team ID from payload
-        /// *** Set tenant context for this request ***
-        //enantContext.setTeamId(teamId);
-
 
         //  URL verification handshake
         if ("url_verification".equals(type)) {
@@ -61,9 +57,11 @@ public class EventsController {
 
         //  Incoming event callbacks
         if ("event_callback".equals(type)) {
-            // Extract and set tenant context only for real events
+
+            /// Extract and set tenant context for this request
             String teamId = payload.get("team_id").asText(); // extract team ID from payload
             tenantContext.setTeamId(teamId);
+            //  Extract the event type from the payload
             JsonNode event = payload.get("event");
             String eventType = event.get("type").asText();
 

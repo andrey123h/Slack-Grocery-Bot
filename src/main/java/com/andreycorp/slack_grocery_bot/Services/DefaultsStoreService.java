@@ -1,31 +1,35 @@
 package com.andreycorp.slack_grocery_bot.Services;
 
+import com.andreycorp.slack_grocery_bot.jdbc.JdbcDefaultsStoreService;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Stores the workspace‐admin’s list of default groceries in memory.
- * Key = item name (String), Value = quantity (Integer).
+ * Service façade over the JDBC DAO for default grocery items,
+ * note : this was in memory before
  */
+
 @Service
 public class DefaultsStoreService {
-    // Use LinkedHashMap to preserve insertion order
-    private final Map<String, Integer> defaults = new LinkedHashMap<>();
+    private final JdbcDefaultsStoreService dao;
 
-    /** Return a copy of the map so callers can render it (e.g. in Home view). */
-    public synchronized Map<String, Integer> listAll() {
-        return new LinkedHashMap<>(defaults);
+    public DefaultsStoreService(JdbcDefaultsStoreService dao) {
+        this.dao = dao;
     }
 
-    /** Create or update a default item. */
-    public synchronized void upsertDefault(String itemName, int qty) {
-        defaults.put(itemName, qty);
+    /** Fetch all defaults for the current workspace. */
+    public Map<String, Integer> listAll() {
+        return dao.listAll();
+    }
+
+    /** Create or update the default quantity for an item. */
+    public void upsertDefault(String itemName, int qty) {
+        dao.upsertDefault(itemName, qty);
     }
 
     /** Remove a default item by name. */
-    public synchronized void deleteDefault(String itemName) {
-        defaults.remove(itemName);
+    public void deleteDefault(String itemName) {
+        dao.deleteDefault(itemName);
     }
 }

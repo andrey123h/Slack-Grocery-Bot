@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
-
+// -------switched to DB------
 /**
  * In-memory implementation of the EventStore interface.
  * This class provides thread-safe storage and retrieval of Slack message and reaction events.
  * It uses CopyOnWriteArrayList to ensure thread safety for concurrent access.
  */
 
-// @Service
+//@Service
 public class EventStoreService implements EventStore {
     private final CopyOnWriteArrayList<MessageEvent> messages = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<ReactionEvent> reactions = new CopyOnWriteArrayList<>();

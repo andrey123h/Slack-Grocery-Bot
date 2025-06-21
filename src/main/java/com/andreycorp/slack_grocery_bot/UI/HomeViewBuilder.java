@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Home-view JSON construction logic, including day+time pickers and a Save button.
+ * Home-view JSON construction logic, including day+time pickers, a Save button,
+ * and a real-time summary block at the bottom.
  */
 @Component
 public class HomeViewBuilder {
@@ -23,15 +24,16 @@ public class HomeViewBuilder {
      * Build the Home view for workspace admins:
      *  1) Header + intro
      *  2) Day & time pickers for open/close
-     *  3)  Save schedule button
+     *  3) Save schedule button
      *  4) Current Defaults + Add New Default
+     *  5) Real-time summary block
      */
-    public String buildAdminHomeJson(Map<String, Integer> defaults) {
+    public String buildAdminHomeJson(Map<String, Integer> defaults, String summaryMd) {
         ScheduleSettings settings = scheduleSettingsService.get();
-        String openDay   = settings.getOpenDay();   // e.g. "MON"
-        String openTime  = settings.getOpenTime();  // e.g. "09:00"
-        String closeDay  = settings.getCloseDay();  // e.g. "THU"
-        String closeTime = settings.getCloseTime(); // e.g. "17:00"
+        String openDay   = settings.getOpenDay();
+        String openTime  = settings.getOpenTime();
+        String closeDay  = settings.getCloseDay();
+        String closeTime = settings.getCloseTime();
 
         Map<String,String> dayLabels = Map.of(
                 "MON","Monday", "TUE","Tuesday", "WED","Wednesday",
@@ -47,7 +49,7 @@ public class HomeViewBuilder {
                         "},\n" +
                         "{\n" +
                         "  \"type\": \"section\",\n" +
-                        "  \"text\": {\"type\":\"mrkdwn\",\"text\":\"Hello admin, Bellow is your dashboard.\"}\n" +
+                        "  \"text\": {\"type\":\"mrkdwn\",\"text\":\"Hello admin, Below is your dashboard.\"}\n" +
                         "},\n" +
                         "{ \"type\": \"divider\" },\n";
 
@@ -136,23 +138,22 @@ public class HomeViewBuilder {
                         "{ \"type\":\"section\",\n" +
                                 "  \"text\":{ \"type\":\"mrkdwn\",\"text\":\"• *" + e.getKey() + "* — " + e.getValue() + "\"},\n" +
                                 "  \"accessory\":{\n" +
-                                "    \"type\":\"overflow\",\n" +
+                                "    \"type\": \"overflow\",\n" +
                                 "    \"action_id\":\"default_item_actions\",\n" +
                                 "    \"options\":[\n" +
                                 "      {\"text\":{\"type\":\"plain_text\",\"text\":\"Edit\",\"emoji\":true},\"value\":\"EDIT|" + e.getKey() + "\"},\n" +
                                 "      {\"text\":{\"type\":\"plain_text\",\"text\":\"Delete\",\"emoji\":true},\"value\":\"DELETE|" + e.getKey() + "\"}\n" +
                                 "    ]\n" +
                                 "  }\n" +
-                                "}"
-                )
+                                "}")
                 .collect(Collectors.joining(",\n"));
 
         String addDefaultFooter =
                 "{ \"type\":\"divider\" },\n" +
                         "{\n" +
-                        "  \"type\":\"actions\",\n" +
+                        "  \"type\": \"actions\",\n" +
                         "  \"elements\":[\n" +
-                        "    { \"type\":\"button\",\n" +
+                        "    { \"type\": \"button\",\n" +
                         "      \"text\": {\"type\":\"plain_text\",\"text\":\"Add New Default\",\"emoji\":true},\n" +
                         "      \"action_id\":\"add_default\",\n" +
                         "      \"style\":\"primary\"\n" +
@@ -171,22 +172,27 @@ public class HomeViewBuilder {
                 saveButtonBlock +
                 defaultsHeader +
                 (itemBlocks.isEmpty() ? "" : itemBlocks + ",\n") +
-                addDefaultFooter +
+                addDefaultFooter + ",\n" +
+                "{ \"type\": \"divider\" },\n" +
+                "{ \"type\": \"section\", \"text\": {\"type\":\"mrkdwn\",\"text\":\"*🕒 Real-Time Summary*\\n" + summaryMd.replace("\"", "\\\"") + "\"}}\n" +
                 "  ]\n" +
                 "}";
     }
 
     /**
-     * Build a simple Home view for regular users (no admin controls).
+     * Build a simple Home view for regular users (no admin controls),
+     * with a real-time summary block.
      */
-    public String buildUserWelcomeHomeJson() {
+    public String buildUserWelcomeHomeJson(String summaryMd) {
         return "{\n" +
                 "  \"type\":\"home\",\n" +
                 "  \"blocks\":[\n" +
                 "    {\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"👋 Welcome to GrocFriend! Your best grocery friend\",\"emoji\":true}},\n" +
                 "    {\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"To place your weekly grocery orders, go to #office-grocery and mention @GrocFriend in the weekly thread; `@GrocFriend 2 apples, 3 bananas`.\"}},\n" +
                 "    {\"type\":\"divider\"},\n" +
-                "    {\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"🏠 Go to #office-grocery\",\"emoji\":true},\"url\":\"https://slack.com/app_redirect?channel=<YOUR_OFFICE_GROCERY_CHANNEL_ID>\"}]}\n" +
+                "    {\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"🏠 Go to #office-grocery\",\"emoji\":true},\"url\":\"https://slack.com/app_redirect?channel=<YOUR_OFFICE_GROCERY_CHANNEL_ID>\"}]},\n" +
+                "    {\"type\":\"divider\"},\n" +
+                "    {\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*🕒 Real-Time Summary*\\n" + summaryMd.replace("\"", "\\\"") + "\"}}\n" +
                 "  ]\n" +
                 "}";
     }
