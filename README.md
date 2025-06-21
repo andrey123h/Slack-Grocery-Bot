@@ -55,14 +55,14 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 
 
 ### Admin Features
-- Interactive UI: Block Kit interface for managing default grocery items and configurable scheduler
+- Interactive UI: Block Kit interface for managing default grocery items and configurable scheduler alongisde real time summary
 - On-Demand Summaries: Slash command to generate summaries anytime, DM and thread support.
 
 
 ### User Experience
 - Simple Ordering: Users just mention the bot and list items (e.g - '@GrocFriend 10 apple, 2.5 kg sugar, Milk') 
 - Format Flexibility: Supports varied input formats, default quantity handling
-- Interactive UI with instructions 
+- Interactive UI with instructions and real time summary
 
 ### Secure Verification:
 - HTTP middleware uses Slack’s signing secret to verify each HTTP request is genuinely from Slack before any business logic runs.
