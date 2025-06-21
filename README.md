@@ -2,9 +2,10 @@
 
 ![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
 
-Leverages the Slack Web API alongside Spring MVC, integrated
+Leverages the Slack Web API alongside Spring MVC 
+REST controllers for order intake. integrated
 two LLM backends, Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API via clear prompt engineering.
-REST controllers for order intake, implements custom Slack slash commands,
+Implements custom Slack slash commands,
 interactive UI via Slack Block Kit, uses Java’s regex for
 parsing free-form message text, and relies on Jackson
 for JSON payload handling. Timed operations are
