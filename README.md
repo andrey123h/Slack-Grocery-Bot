@@ -77,6 +77,9 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
  - Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API's integrations for weekly summary generation
 
 
+
+
+
 ![App install](https://github.com/user-attachments/assets/9aa6825e-8a5b-4f89-9657-8863089d0c88)
 
 
