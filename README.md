@@ -80,19 +80,19 @@ In progress: deployment on serverless cloud, and implementing multi-tenant datab
 ## Screenshots demo
 
 ![App install](https://github.com/user-attachments/assets/9aa6825e-8a5b-4f89-9657-8863089d0c88)
-
+### User Interface
 ![realtime](https://github.com/user-attachments/assets/b7c354ee-ba54-4dc3-9165-7af314eb5695)
-
+### User's Making Orders
 ![2 members](https://github.com/user-attachments/assets/01785016-2aec-4cf0-bf1a-f1ee963c474a)
-
+### Admin Control Dashborad
 ![new dash](https://github.com/user-attachments/assets/7e9265f2-777e-475e-9d38-b22e703e2ba1)
-
+### ChatGPT Summary
 ![chatsum](https://github.com/user-attachments/assets/29366fee-8a36-4ab8-8825-d8727b433217)
 
 ![+1](https://github.com/user-attachments/assets/bb1ec34c-f1fa-425c-b625-8345b94e46a0)
-
+### Admin DM Summary Slash Command
 ![DM](https://github.com/user-attachments/assets/5d7cc799-28dc-4e45-81a5-bff3e95d12e2)
-
+### Admin Edit
 ![new dash edit](https://github.com/user-attachments/assets/4e6c0e74-c935-43d9-82e8-cee5f4c3039a)
 
 ![generating](https://github.com/user-attachments/assets/880fa90b-3157-4f40-9cb2-83be0e4c8bc2)
