@@ -32,7 +32,7 @@ public class SummaryService {
         this.eventStore = eventStore;
     }
 
-        // ----
+
     /**
      * Pulls every order & +1 reaction in *this* workspace and
      * returns a Markdown summary.
@@ -50,7 +50,7 @@ public class SummaryService {
         //  render
         return buildSummaryText(data, plusOnes);
     }
-    // ----
+
 
 
     /**

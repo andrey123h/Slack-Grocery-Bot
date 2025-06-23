@@ -206,4 +206,30 @@ public class SlackMessageService {
     }
 
 
+    /**
+     * Look up a public channel by its name (without the “#”) and return its ID.
+     * the channel name must be exactly grocery-channel within the workspace.
+     */
+
+    public String getChannelIdByName(String channelName) throws IOException {
+        try {
+            var resp = client().conversationsList(r -> r
+                    .excludeArchived(true)
+                    .limit(1000)
+            );
+            if (!resp.isOk()) {
+                throw new IOException("conversations.list error: " + resp.getError());
+            }
+            return resp.getChannels().stream()
+                    .filter(c -> c.getName().equals(channelName))
+                    .findFirst()
+                    .map(c -> c.getId())
+                    .orElseThrow(() ->
+                            new IOException("Channel not found: " + channelName));
+        } catch (SlackApiException e) {
+            throw new IOException("Failed to list conversations", e);
+        }
+    }
+
+
 }

@@ -27,7 +27,6 @@ public class SlackEventHandlers {
     private final EventStore eventStore;
     private final TenantContext tenantContext;
     private final SummaryService summaryService;
-    @Value("${slack.admin.channel:}") String adminChannel;
 
     public SlackEventHandlers(
             SlackMessageService slackMessageService,
@@ -46,7 +45,7 @@ public class SlackEventHandlers {
     /**
      * Builds & publishes the Home tab view when a user opens the App Home.
      * Scopes defaults and admin check to the current workspace (tenant).
-     * ith real-time summary
+     * with real-time summary
      */
 
 
@@ -55,13 +54,20 @@ public class SlackEventHandlers {
         boolean isAdmin = slackMessageService.isWorkspaceAdmin(userId);
         // Generate current workspace summary
         String summaryMd = summaryService.generateSummaryMarkdown();
-        if (!isAdmin) {
-            Map<String, Integer> defaults = defaultGroceryService.listAll();
-            String adminHomeJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
-            slackMessageService.publishHomeView(userId, adminHomeJson);
+
+        // Resolve channel ID once per workspace
+        String groceryChannelId = slackMessageService.getChannelIdByName("office-grocery");
+
+        if (isAdmin) {
+            // Admins get the admin dashboard + summary
+            Map<String,Integer> defaults = defaultGroceryService.listAll();
+            String adminJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
+            slackMessageService.publishHomeView(userId, adminJson);
+
         } else {
-            String userHomeJson = homeViewBuilder.buildUserWelcomeHomeJson(summaryMd);
-            slackMessageService.publishHomeView(userId, userHomeJson);
+            // Regular users get the welcome + real-time summary
+            String userJson = homeViewBuilder.buildUserWelcomeHomeJson(summaryMd, groceryChannelId);
+            slackMessageService.publishHomeView(userId, userJson);
         }
     }
 
@@ -91,15 +97,23 @@ public class SlackEventHandlers {
 
         // After each new order, rebuild and republish Home tab for this user
         String summaryMd = summaryService.generateSummaryMarkdown();
+        // Resolve channel ID  per workspace
+        String groceryChannelId = slackMessageService.getChannelIdByName("office-grocery");
+
         boolean isAdmin  = slackMessageService.isWorkspaceAdmin(user);
         String homeJson;
+
         if (isAdmin) {
-            Map<String, Integer> defaults = defaultGroceryService.listAll();
-            homeJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
+            // Admins get the admin dashboard + summary
+            Map<String,Integer> defaults = defaultGroceryService.listAll();
+            String adminJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
+            slackMessageService.publishHomeView(user, adminJson);
+
         } else {
-            homeJson = homeViewBuilder.buildUserWelcomeHomeJson(summaryMd);
+            // Regular users get the welcome + real-time summary
+            String userJson = homeViewBuilder.buildUserWelcomeHomeJson(summaryMd, groceryChannelId);
+            slackMessageService.publishHomeView(user, userJson);
         }
-        slackMessageService.publishHomeView(user, homeJson);
     }
 
     /**

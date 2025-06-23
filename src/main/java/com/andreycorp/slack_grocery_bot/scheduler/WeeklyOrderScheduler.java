@@ -20,7 +20,7 @@ public class WeeklyOrderScheduler {
     private final SlackMessageService slackMessageService;
     private final EventStore          eventStore;
     private final SummaryService      summaryService;
-    private final AISummaryService    aiSummaryService;
+    private final AISummaryService    aiSummaryService; // optional, not in deployment
     private final String              orderChannel;
     private final String              adminChannel;
 
@@ -32,7 +32,7 @@ public class WeeklyOrderScheduler {
             SummaryService summaryService,
             AISummaryService aiSummaryService,
             @Value("${slack.order.channel}") String orderChannel, // #office-grocery same for all tenants
-            @Value("${slack.admin.channel:}") String adminChannel
+            @Value("${slack.admin.channel:}") String adminChannel // optional. not in deployment.
     ) {
         this.slackMessageService   = slackMessageService;
         this.eventStore            = eventStore;
@@ -95,13 +95,15 @@ public class WeeklyOrderScheduler {
 
     // Message to be sent when a new grocery order thread is opened
     private  static final String NEW_THREAD_MSG =
-            "*🛒 New Grocery Order Thread!* Please add your items by Thursday EOD.\n\n" +
-                    "Mention me, then list your items in one line:\n```@GrocFriend 2 apples, 1.5 kg sugar, banana```\n\n" +
+            "*🛒 New Grocery Order Thread! Please add your items*.\n\n" +
+                    "Mention me, then list your items :\n```@GrocFriend 2 apples, 1.5 kg sugar, banana```\n\n" +
                     "Supported formats:\n" +
                     "  – Integers or decimals (e.g. `2`, `1.5`)\n" +
                     "  – Commas/semicolons/periods to separate items\n" +
                     "  – Multi-word items (e.g. `2 green apples`)\n" +
                     "  – Default quantity of `1` if omitted\n" +
                     "  – Special characters supported (e.g. `crème fraîche`)\n\n" +
-                    "React with 👍 to encourage an order!\n";
+                    "React with 👍 to encourage an order.\n"+
+                    "Items quantity with same name will be aggregated per user.\n"+
+                    "You can find the real-time grocery list in the *GrocFriend*  home tab.\n";
 }

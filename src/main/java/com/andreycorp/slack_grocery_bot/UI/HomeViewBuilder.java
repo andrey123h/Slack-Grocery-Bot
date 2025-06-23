@@ -196,4 +196,26 @@ public class HomeViewBuilder {
                 "  ]\n" +
                 "}";
     }
+
+    /**
+     * User Home view now takes the summary *and* the actual channel ID to link to.
+     */
+    public String buildUserWelcomeHomeJson(String summaryMd, String groceryChannelId) {
+        return "{\n" +
+                "  \"type\":\"home\",\n" +
+                "  \"blocks\":[\n" +
+                "    {\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"👋 Welcome to GrocFriend! Your best grocery friend\",\"emoji\":true}},\n" +
+                "    {\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"To place your weekly grocery orders, go to #office-grocery and mention @GrocFriend in the weekly thread; `@GrocFriend 2 apples, 3 bananas`.\"}},\n" +
+                "    {\"type\":\"divider\"},\n" +
+                "    {\"type\":\"actions\",\"elements\":[\n" +
+                "       {\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"🏠 Go to #office-grocery\",\"emoji\":true},\n" +
+                "        \"url\":\"https://slack.com/app_redirect?channel=" + groceryChannelId + "\"\n" +
+                "       }\n" +
+                "    ]},\n" +
+                "    {\"type\":\"divider\"},\n" +
+                "    {\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*🕒 Real-Time Summary*\\n"
+                + summaryMd.replace("\"","\\\"") + "\"}}\n" +
+                "  ]\n" +
+                "}";
+    }
 }
