@@ -2,6 +2,11 @@
 
 ![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
 
+
+You can install GrocFriend into your workspace by clicking the link below:
+[Add GrocFriend to your Slack workspace](https://slack.com/oauth/v2/authorize?client_id=8817422810738.8817462125314&scope=app_mentions:read,channels:history,chat:write,groups:history,im:history,im:write,pins:write,reactions:read,reminders:write,users:read,reactions:write,incoming-webhook&user_scope=)
+
+
 Leverages the Slack Web API alongside Spring MVC 
 REST controllers for order intake. integrated
 two LLM backends, Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API via clear prompt engineering.
@@ -9,10 +14,10 @@ Implements custom Slack slash commands,
 interactive UI via Slack Block Kit, uses Java’s regex for
 parsing free-form message text, and relies on Jackson
 for JSON payload handling. Timed operations are
-handled by Spring Scheduling. Testing with JUnit & Mockito.
+handled by Spring Scheduling. Tested core logic using JUnit & Mockito
 Database - PostgreSQL with multi-tenant data isolation, accessed via Spring JDBC.
 Implementing an HTTP middleware for authentication and validating of Slack signature. 
-In progress: deployment on serverless cloud, and implementing multi-tenant database support.
+Deployed the SaaS on Render’s serverless platform, multi-tenant PostgreSQL on Neon’s serverless platform
 
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
