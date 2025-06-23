@@ -5,7 +5,7 @@
 ## Install
 You can install GrocFriend into your workspace by clicking the link: 
 [Add GrocFriend to your Slack workspace](https://slack.com/oauth/v2/authorize?client_id=8817422810738.8817462125314&scope=app_mentions:read,channels:history,chat:write,groups:history,im:history,im:write,pins:write,reactions:read,reminders:write,users:read,reactions:write,incoming-webhook&user_scope=)
-## Add me to # grocery-office channel
+## Add to channel named : grocery-office 
 
 
 Leverages the Slack Web API alongside Spring MVC 
