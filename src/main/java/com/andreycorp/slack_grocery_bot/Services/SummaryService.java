@@ -202,4 +202,43 @@ public class SummaryService {
             this.tsByUserItem = tsByUserItem;
         }
     }
+
+
+    // ------- Explicit-team overloads -------
+
+    public String generateSummaryMarkdownForTeam(String teamId) {
+        List<MessageEvent> msgs = eventStore.fetchMessagesForTeam(teamId);
+        OrderSummaryData data = processMessageEvents(msgs);
+        Map<String, Long> plusOnes = eventStore.fetchReactionsForTeam(teamId).stream()
+                .filter(r -> "+1".equals(r.reaction()))
+                .collect(Collectors.groupingBy(ReactionEvent::ts, Collectors.counting()));
+        return buildSummaryText(data, plusOnes);
+    }
+
+    public void summarizeThreadForTeam(
+            String teamId,
+            String orderChannel,
+            String threadTs,
+            List<MessageEvent> events,
+            String adminChannel
+    ) throws IOException {
+        if (events.isEmpty()) {
+            slackMessageService.sendMessageForTeam(
+                    teamId, orderChannel, "No orders were placed this week.", threadTs
+            );
+            return;
+        }
+        OrderSummaryData orderData = processMessageEvents(events);
+        Map<String, Long> plusOneCountByTs = eventStore.fetchReactionsForTeam(teamId).stream()
+                .filter(r -> "+1".equals(r.reaction()) && r.ts().compareTo(threadTs) >= 0)
+                .collect(Collectors.groupingBy(ReactionEvent::ts, Collectors.counting()));
+        String summary = buildSummaryText(orderData, plusOneCountByTs);
+        // post via explicit-team methods
+        slackMessageService.sendMessageForTeam(teamId, orderChannel, summary, threadTs);
+        if (adminChannel != null && !adminChannel.isEmpty()) {
+            slackMessageService.sendMessageForTeam(
+                    teamId, adminChannel, "Summary:\n" + summary
+            );
+        }
+    }
 }

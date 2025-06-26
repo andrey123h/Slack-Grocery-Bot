@@ -59,7 +59,7 @@ public class OAuthController {
         String teamId        = json.get("team").get("id").asText(); // team ID of the workspace
         String botToken      = json.get("access_token").asText(); // bot token for the app
 
-        //  Persist (or update) the workspace credentials
+        //  Persist the workspace credentials
         workspaceService.upsertWorkspace(teamId, botToken, signingSecret);
 
         //  Send confirmation message

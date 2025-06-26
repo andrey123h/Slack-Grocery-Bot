@@ -21,8 +21,12 @@ import java.util.concurrent.ScheduledFuture;
  *
  * On startup, it loads all tenant IDs and schedules open/close tasks per tenant.
  * When an admin updates their schedule pickers, it persists to the DB and reschedules only that tenant's jobs.
+ *
+ * Cron tasks are not using the TenantContext directly, as they are not run in the context of HTTP request.
  */
+
 @Service
+
 public class ScheduleSettingsService {
 
     private static final String JERUSALEM_ZONE     = "Asia/Jerusalem";
@@ -31,11 +35,11 @@ public class ScheduleSettingsService {
     private static final String DEFAULT_OPEN_TIME  = "09:00";
     private static final String DEFAULT_CLOSE_TIME = "17:00";
 
-    private final TaskScheduler                taskScheduler;
-    private final WeeklyOrderScheduler         weeklyOrderScheduler;
-    private final JdbcScheduleSettingsService  dao;
-    private final TenantContext                tenantContext;
-    private final ZoneId                       zoneId = ZoneId.of(JERUSALEM_ZONE);
+    private final TaskScheduler               taskScheduler;
+    private final WeeklyOrderScheduler        weeklyOrderScheduler;
+    private final JdbcScheduleSettingsService dao;
+    private final TenantContext               tenantContext;
+    private final ZoneId                      zoneId = ZoneId.of(JERUSALEM_ZONE);
 
     // Track scheduled jobs per tenant
     private final Map<String, ScheduledFuture<?>> openJobs  = new ConcurrentHashMap<>();
@@ -53,9 +57,12 @@ public class ScheduleSettingsService {
         this.tenantContext        = tenantContext;
     }
 
+    /**
+     * Initialize the service by scheduling jobs for all existing tenants.
+     * This runs once at application startup to ensure all teams have their jobs scheduled.
+     */
     @PostConstruct
     public void init() {
-        // Schedule jobs for every workspace in the database
         List<String> teamIds = dao.findAllTeamIds();
         for (String teamId : teamIds) {
             scheduleForTenant(teamId);
@@ -64,7 +71,7 @@ public class ScheduleSettingsService {
 
     /**
      * Load schedule settings for the given tenant and (re)register Cron jobs.
-     * Uses explicit-tenant DAO methods—never touches tenantContext here.
+     * Never references TenantContext here—uses explicit teamId.
      */
     private synchronized void scheduleForTenant(String teamId) {
         // Cancel any existing jobs
@@ -73,7 +80,7 @@ public class ScheduleSettingsService {
         ScheduledFuture<?> oldClose = closeJobs.remove(teamId);
         if (oldClose != null) oldClose.cancel(false);
 
-        // Fetch settings for this tenant (or fall back to defaults)
+        // Fetch settings or fall back to defaults
         ScheduleSettings s = dao.findByTeamId(teamId);
         if (s == null) {
             s = new ScheduleSettings(
@@ -87,9 +94,8 @@ public class ScheduleSettingsService {
         int oh = Integer.parseInt(ot[0]), om = Integer.parseInt(ot[1]);
         String openCron = String.format("0 %d %d * * %s", om, oh, s.getOpenDay());
         ScheduledFuture<?> openFuture = taskScheduler.schedule(() -> {
-            tenantContext.setTeamId(teamId);
             try {
-                weeklyOrderScheduler.openOrderThread();
+                weeklyOrderScheduler.openOrderThreadFor(teamId);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -101,9 +107,8 @@ public class ScheduleSettingsService {
         int ch = Integer.parseInt(ct[0]), cm = Integer.parseInt(ct[1]);
         String closeCron = String.format("0 %d %d * * %s", cm, ch, s.getCloseDay());
         ScheduledFuture<?> closeFuture = taskScheduler.schedule(() -> {
-            tenantContext.setTeamId(teamId);
             try {
-                weeklyOrderScheduler.closeOrderThread();
+                weeklyOrderScheduler.closeOrderThreadFor(teamId);
             } catch (Exception e) {
                 e.printStackTrace();
             }

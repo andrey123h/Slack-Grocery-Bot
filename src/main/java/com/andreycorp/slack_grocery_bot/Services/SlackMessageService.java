@@ -53,6 +53,15 @@ public class SlackMessageService {
     }
 
     /**
+     * Returns a MethodsClient for an explicit tenant ID.
+     */
+    private MethodsClient clientForTeam(String teamId) {
+        String token = jdcbWorkspaceService.getBotToken(teamId);
+        return Slack.getInstance().methods(token);
+    }
+
+
+    /**
      * Sends a message to a specified Slack channel.
      */
     public ChatPostMessageResponse sendMessage(String channelId, String text)
@@ -230,6 +239,54 @@ public class SlackMessageService {
             throw new IOException("Failed to list conversations", e);
         }
     }
+
+    // ---- Explicit-teamID overloads (for scheduling) ----
+
+    public ChatPostMessageResponse sendMessageForTeam(
+            String teamId, String channelId, String text) throws IOException {
+        try {
+            ChatPostMessageResponse resp = clientForTeam(teamId)
+                    .chatPostMessage(r -> r.channel(channelId).text(text));
+            if (!resp.isOk()) throw new IOException(resp.getError());
+            return resp;
+        } catch (SlackApiException e) {
+            throw new IOException(e);
+        }
+    }
+
+    public ChatPostMessageResponse sendMessageForTeam(
+            String teamId, String channelId, String text, String threadTs) throws IOException {
+        try {
+            ChatPostMessageResponse resp = clientForTeam(teamId)
+                    .chatPostMessage(r -> r.channel(channelId).text(text).threadTs(threadTs));
+            if (!resp.isOk()) throw new IOException(resp.getError());
+            return resp;
+        } catch (SlackApiException e) {
+            throw new IOException(e);
+        }
+    }
+
+    public void pinMessageForTeam(String teamId, String channelId, String messageTs) throws IOException {
+        try {
+            PinsAddResponse resp = clientForTeam(teamId)
+                    .pinsAdd(r -> r.channel(channelId).timestamp(messageTs));
+            if (!resp.isOk()) throw new IOException(resp.getError());
+        } catch (SlackApiException e) {
+            throw new IOException(e);
+        }
+    }
+
+    public void addReactionForTeam(String teamId, String channelId, String messageTs, String emoji) throws IOException {
+        try {
+            ReactionsAddResponse resp = clientForTeam(teamId)
+                    .reactionsAdd(r -> r.channel(channelId).timestamp(messageTs).name(emoji));
+            if (!resp.isOk()) throw new IOException(resp.getError());
+        } catch (SlackApiException e) {
+            throw new IOException(e);
+        }
+    }
+
+
 
 
 }
