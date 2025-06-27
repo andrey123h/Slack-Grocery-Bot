@@ -10,7 +10,7 @@
 
 ![allow](https://github.com/user-attachments/assets/a9073e1e-3ca7-47d4-96d1-6d91365eb154)
 
-
+# Tech & tools
 Leverages the Slack Web API alongside Spring MVC 
 REST controllers for order intake. integrated
 two LLM backends, Ollama’s deepseek-r1:1.5b and OpenAI’s ChatGPT API via clear prompt engineering.
