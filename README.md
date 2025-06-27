@@ -2,9 +2,13 @@
 
 ![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
 
-# You can add GrocFriend into your workspace by clicking the link: 
+# Quick start 
+### Step 1. Create new channel named #office-grocery on your Slack workspace.
+### Step 2. Click the following link, choose #office-grocery and click allow
 [Add GrocFriend to your Slack workspace](https://slack.com/oauth/v2/authorize?client_id=8817422810738.8817462125314&scope=app_mentions:read,channels:history,chat:write,groups:history,im:history,im:write,pins:write,reactions:read,reminders:write,users:read,reactions:write,incoming-webhook&user_scope=)
-## Add the bot to channel named : office-grocery 
+### Step 3. Enjoy and contact with me for feedback.
+
+![allow](https://github.com/user-attachments/assets/a9073e1e-3ca7-47d4-96d1-6d91365eb154)
 
 
 Leverages the Slack Web API alongside Spring MVC 
