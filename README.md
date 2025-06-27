@@ -3,7 +3,7 @@
 ![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
 
 # Quick start 
-### Step 1. Create new channel named #grocery-office on your Slack workspace.
+### Step 1. Create new channel named grocery-office on your Slack workspace.
 ### Step 2. Click the following link, choose #grocery-office and click allow
 [Add GrocFriend to your Slack workspace](https://slack.com/oauth/v2/authorize?client_id=8817422810738.8817462125314&scope=app_mentions:read,channels:history,chat:write,groups:history,im:history,im:write,pins:write,reactions:read,reminders:write,users:read,reactions:write,incoming-webhook&user_scope=)
 ### Step 3. Enjoy and contact with me for feedback.
