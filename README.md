@@ -21,7 +21,7 @@ for JSON payload handling. Timed operations are
 handled by Spring Scheduling. Tested core logic using JUnit & Mockito
 Database - PostgreSQL with multi-tenant data isolation, accessed via Spring JDBC.
 Implementing an HTTP middleware for authentication and validating of Slack signature. 
-Deployed the SaaS on Render’s platform, multi-tenant PostgreSQL hosted by Neon.
+Dockerized and deployed on Render, backed by a Neon-hosted multi-tenant PostgreSQL.
 
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
