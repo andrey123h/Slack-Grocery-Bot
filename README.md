@@ -43,7 +43,7 @@ Deployed the SaaS on Render’s serverless platform, multi-tenant PostgreSQL on 
 - ### Automated Closure & Summary
    At a configurable day & time later in the week, automatically close the thread and post a neatly formatted summary showing per-user totals alongside reaction counts.
 
-- ### On-demand Admin Summaries
+- ### On-demand Admin Summaries (not in production, yet)
    Provide a slash command for workspace admins to trigger instant DM + in-thread summaries whenever needed.
 
 - ### Real-time summary
