@@ -88,7 +88,6 @@ Deployed the SaaS on Render’s serverless platform, multi-tenant PostgreSQL on 
 
 ## Screenshots demo
 
-![App install](https://github.com/user-attachments/assets/9aa6825e-8a5b-4f89-9657-8863089d0c88)
 ### User Interface
 ![realtime](https://github.com/user-attachments/assets/b7c354ee-ba54-4dc3-9165-7af314eb5695)
 ### User's Making Orders
