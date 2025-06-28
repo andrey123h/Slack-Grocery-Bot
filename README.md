@@ -10,6 +10,19 @@
 
 ![allow](https://github.com/user-attachments/assets/a9073e1e-3ca7-47d4-96d1-6d91365eb154)
 
+# Overview
+Leverages the Slack Web API alongside Spring MVC 
+REST controllers for evet driven webhooks, with a HTTP request-scoped to isolate each HTTP request. integrated
+two LLM backends, Ollama’s deepseek-r1:1.5b (local LLM) and OpenAI’s ChatGPT API for summary generation.
+Implements custom Slack slash commands,
+interactive UI via Slack Block Kit, uses Java’s Regex for
+parsing free-form message text, and relies on Jackson
+for JSON payload handling. Timed operations are
+handled by Spring’s ThreadPoolTaskScheduler and CronTrigger. Tested core logic using JUnit framework & Mockito.
+PostgreSQL database with multi-tenant data isolation, accessed via Spring JDBC.
+Implementes an custom HTTP middleware for validating Slack request signature.
+Dockerized and deployed on Render, backed by a Neon-hosted multi-tenant PostgreSQL.
+
 
 ## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
