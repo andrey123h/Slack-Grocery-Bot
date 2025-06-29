@@ -1,6 +1,5 @@
-# Multi-stage Dockerfile for Slack Grocery Bot
 
-#--- Build Stage --------------------------------------------------------------
+# Build Stage 
 FROM maven:3.9.4-eclipse-temurin-21-alpine AS build
 
 # Set working directory inside the container
@@ -15,11 +14,11 @@ RUN mvn dependency:go-offline -B
 # Copy the rest of the source code
 COPY src ./src
 
-# Package the application, skipping tests for speed (CI can run tests separately)
+# Package the application, skipping tests 
 RUN mvn clean package -DskipTests
 
 
-#--- Runtime Stage ------------------------------------------------------------
+# Runtime Stage 
 FROM eclipse-temurin:21-jre-alpine
 
 # Create a non-root user for better security
@@ -30,7 +29,7 @@ WORKDIR /app
 # Copy the built jar from the build stage
 COPY --from=build /app/target/slack-grocery-bot-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose the port your Spring Boot app listens on
+# Expose the port Spring Boot app listens on
 EXPOSE 8080
 
 # Switch to non-root user
