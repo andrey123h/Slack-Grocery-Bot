@@ -54,35 +54,6 @@ public class SummaryService {
 
 
     /**
-     * Aggregates a list of MessageEvent into a summary text (including reaction counts)
-     * and posts it to Slack.
-     */
-    public void summarizeThread(
-            String orderChannel,
-            String threadTs,
-            List<MessageEvent> events,
-            String adminChannel
-    ) throws IOException {
-        if (events.isEmpty()) {
-            slackMessageService.sendMessage(orderChannel,
-                    "No orders were placed this week.", threadTs);
-            return;
-        }
-
-        // Process all orders from messages
-        OrderSummaryData orderData = processMessageEvents(events);
-
-        // Process +1 reactions
-        Map<String, Long> plusOneCountByTs = processReactions(threadTs);
-
-        // Build formatted summary
-        String summary = buildSummaryText(orderData, plusOneCountByTs);
-
-        // Send to appropriate channels
-        sendSummaryToChannels(orderChannel, threadTs, adminChannel, summary);
-    }
-
-    /**
      * Processes message events to extract order information by user and item.
      */
     public OrderSummaryData processMessageEvents(List<MessageEvent> events) {
@@ -170,21 +141,6 @@ public class SummaryService {
         return String.format("%s× %s%s", qtyStr, item, suffix);
     }
 
-    /**
-     * Sends the summary to the appropriate Slack channels.
-     */
-    private void sendSummaryToChannels(
-            String orderChannel,
-            String threadTs,
-            String adminChannel,
-            String summary) throws IOException {
-
-        slackMessageService.sendMessage(orderChannel, summary, threadTs);
-
-        if (adminChannel != null && !adminChannel.isEmpty()) {
-            slackMessageService.sendMessage(adminChannel, "Summary:\n" + summary);
-        }
-    }
 
     /**
      * Data class to hold order summary information.
@@ -204,17 +160,9 @@ public class SummaryService {
     }
 
 
-    // ------- Explicit-team overloads -------
 
-    public String generateSummaryMarkdownForTeam(String teamId) {
-        List<MessageEvent> msgs = eventStore.fetchMessagesForTeam(teamId);
-        OrderSummaryData data = processMessageEvents(msgs);
-        Map<String, Long> plusOnes = eventStore.fetchReactionsForTeam(teamId).stream()
-                .filter(r -> "+1".equals(r.reaction()))
-                .collect(Collectors.groupingBy(ReactionEvent::ts, Collectors.counting()));
-        return buildSummaryText(data, plusOnes);
-    }
 
+    // main method to summarize athread for a specific team
     public void summarizeThreadForTeam(
             String teamId,
             String orderChannel,

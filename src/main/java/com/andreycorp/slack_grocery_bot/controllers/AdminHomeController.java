@@ -14,7 +14,9 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- *  Controller for handling Slack Home-tab interactions
+ *  Controller to handle all interactions with the Admin Home tab
+ *  Block actions like schedule pickers, default items.
+ *  View submissions for saving settings
  */
 
 @RestController
@@ -35,6 +37,7 @@ public class AdminHomeController {
     /**
      * Handles Slack block_actions & view_submission
      */
+
     @PostMapping(
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, // expects URL-encoded form data
             produces = MediaType.TEXT_PLAIN_VALUE // reply with plain text
@@ -42,7 +45,6 @@ public class AdminHomeController {
     public ResponseEntity<String> handleDefaultsInteraction(HttpServletRequest request) throws IOException {
         //  Retrieve the raw URL-encoded body that the filter (middleware) cached
         String rawBody = SlackRequestParser.extractRawBody(request);
-
         //  Parse the form-encoded pairs into a Map
         Map<String, String> params = SlackRequestParser.parseFormUrlEncoded(rawBody);
 

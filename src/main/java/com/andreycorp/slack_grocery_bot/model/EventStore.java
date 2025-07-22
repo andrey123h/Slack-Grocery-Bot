@@ -3,9 +3,7 @@ package com.andreycorp.slack_grocery_bot.model;
 import java.util.List;
 
 /**
- * Contract for storing and fetching Slack events (messages & reactions).
- *<p>
- * Includes both legacy, timestamp-based methods and new per-tenant overloads.
+ * Interface for storing and retrieving events related to messages and reactions in Slack.
  */
 public interface EventStore {
 

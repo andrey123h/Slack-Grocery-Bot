@@ -1,9 +1,8 @@
 package com.andreycorp.slack_grocery_bot.controllers;
 
-import com.andreycorp.slack_grocery_bot.*;
+
 import com.andreycorp.slack_grocery_bot.Services.SlackEventHandlers;
 import com.andreycorp.slack_grocery_bot.context.TenantContext;
-import com.andreycorp.slack_grocery_bot.model.EventStore;
 import com.andreycorp.slack_grocery_bot.parsers.SlackRequestParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,30 +11,28 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+
 
 /**
  *  Controller to handle incoming Slack events.
- *  1) URL‐verification (challenge handshake).
- *  2) app_home_opened (publish Home-tab view).
- *  3) app_mention (record order + add reaction for use ack).
- *  4) reaction_added (record user reactions).
+ *  1) url_verification event (when Slack verifies the endpoint on configuring an Events API Request URL.)
+ *  2) app_home_opened (when a user opens the app's Home tab)
+ *  3) app_mention (when the bot is mentioned in a message)
+ *  4) reaction_added (when a user adds a reaction to a message)
  */
 
 @RestController
 @RequestMapping("/slack/events")
 public class EventsController {
     private final SlackEventHandlers handlers;
-    private final EventStore eventStore;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TenantContext tenantContext;
 
     public EventsController(
             SlackEventHandlers handlers,
-            EventStore eventStore, TenantContext tenantContext
+            TenantContext tenantContext
     ) {
         this.handlers = handlers;
-        this.eventStore = eventStore;
         this.tenantContext = tenantContext;
     }
 
@@ -44,7 +41,7 @@ public class EventsController {
             produces = MediaType.TEXT_PLAIN_VALUE // reply with plain text
     )
     public ResponseEntity<String> receive(HttpServletRequest request) throws Exception {
-        // extracting and parsing JSON body that filter cached
+        // extracting and parsing JSON body that filter (middleware) cached
         JsonNode payload = SlackRequestParser.parseJsonBody(request, objectMapper);
         String type = SlackRequestParser.extractJsonType(payload);
 
@@ -67,13 +64,13 @@ public class EventsController {
 
             switch (eventType) {
                 case "app_home_opened":
-                    handlers.handleAppHomeOpened(event); // publish Home-tab view
+                    handlers.handleAppHomeOpened(event);
                     break;
                 case "app_mention":
-                    handlers.handleMessageEvent(event); // record order + add reaction for user acknowledgment
+                    handlers.handleMessageEvent(event);
                     break;
                 case "reaction_added":
-                    handlers.handleReactionAdded(event); // record user reactions
+                    handlers.handleReactionAdded(event);
                     break;
                 default:
                     // ignore other event types
@@ -83,6 +80,9 @@ public class EventsController {
         //  ack  with an empty 200
         return ResponseEntity.ok("");
     }
+
+
+
 
     // -- debug endpoints to fetch stored messages and reactions --
     /*

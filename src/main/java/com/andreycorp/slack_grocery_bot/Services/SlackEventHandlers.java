@@ -59,7 +59,7 @@ public class SlackEventHandlers {
         String groceryChannelId = slackMessageService.getChannelIdByName("office-grocery");
 
         if (isAdmin) {
-            // Admins get the admin dashboard + summary
+            // Admins get the admin dashboard + real-time summary
             Map<String,Integer> defaults = defaultGroceryService.listAll();
             String adminJson = homeViewBuilder.buildAdminHomeJson(defaults, summaryMd);
             slackMessageService.publishHomeView(userId, adminJson);

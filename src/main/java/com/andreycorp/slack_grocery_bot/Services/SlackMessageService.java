@@ -11,7 +11,6 @@ import com.slack.api.methods.response.pins.PinsAddResponse;
 import com.slack.api.methods.response.reactions.ReactionsAddResponse;
 import com.slack.api.methods.response.users.UsersInfoResponse;
 import com.slack.api.model.User; // isAdmin() isOwner()
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -21,7 +20,7 @@ import java.util.List;
  * Service for sending messages and interacting with Slack API.
  * Provides methods to send messages, pin messages, open direct message channels,
  * check user roles, publish Home tab views, open modals, and add reactions.
- * Centralizes Slack API client creation to avoid redundancy.
+ * Centralizes Slack API client creation
  * all methods are tenant-aware, using the current team ID from TenantContext.
  */
 
@@ -29,8 +28,7 @@ import java.util.List;
 @Service
 public class SlackMessageService {
 
-    //@Value("${slack.bot.token}") // as now switched to  multi-tenant context
-    private String botToken;
+
     private final TenantContext tenantContext;
     private final JdbcWorkspaceService jdcbWorkspaceService;
 
@@ -40,10 +38,10 @@ public class SlackMessageService {
     }
 
     /**
-     * Returns a MethodsClient instance for making Slack API calls.
-     * This client is configured with the bot token from application properties.
-     * * The bot token is retrieved based on the current tenant context (team ID).
-     * centralizes here to avoid repeating in every method.
+     *  Returns a MethodsClient instance for making Slack API calls.
+     *  MethodsClient is the client use to call Slack’s Web API methods.
+     *  Used to send messages, pin messages, open channels, etc.
+     *  The bot token is retrieved based on the current tenant context (team ID).
      */
 
     private MethodsClient client() {
@@ -162,7 +160,6 @@ public class SlackMessageService {
 
     /**
      * Publishes a Home‐tab view for a specific user.
-     * Use the raw JSON you copied from Block Kit Builder’s “App Home Preview.”
      */
     public void publishHomeView(String userId, String viewJson) throws IOException {
         try {
@@ -240,7 +237,7 @@ public class SlackMessageService {
         }
     }
 
-    // ---- Explicit-teamID overloads (for scheduling) ----
+    // ---- Explicit-teamID overloads ----
 
     public ChatPostMessageResponse sendMessageForTeam(
             String teamId, String channelId, String text) throws IOException {
@@ -275,18 +272,6 @@ public class SlackMessageService {
             throw new IOException(e);
         }
     }
-
-    public void addReactionForTeam(String teamId, String channelId, String messageTs, String emoji) throws IOException {
-        try {
-            ReactionsAddResponse resp = clientForTeam(teamId)
-                    .reactionsAdd(r -> r.channel(channelId).timestamp(messageTs).name(emoji));
-            if (!resp.isOk()) throw new IOException(resp.getError());
-        } catch (SlackApiException e) {
-            throw new IOException(e);
-        }
-    }
-
-
 
 
 }
