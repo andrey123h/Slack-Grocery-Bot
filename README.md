@@ -1,7 +1,5 @@
 # GrocFriend
 
-![GrocFriend](https://github.com/user-attachments/assets/940dce17-7b59-4ded-b9af-60a8b8661b5f)
-
 # Quick start 
 Note: Because this application is hosted on Render’s free tier, you may experience cold-start delays of up to several minutes :)
 ### Step 1. Create new channel named grocery-office on your Slack workspace.
@@ -11,21 +9,7 @@ Note: Because this application is hosted on Render’s free tier, you may experi
 
 ![allow](https://github.com/user-attachments/assets/a9073e1e-3ca7-47d4-96d1-6d91365eb154)
 
-# Overview
-Leverages the Slack Web API alongside Spring MVC 
-REST controllers for evet driven webhooks, with a HTTP request-scoped to isolate each HTTP request. integrated
-two LLM backends, Ollama’s deepseek-r1:1.5b (local LLM) and OpenAI’s ChatGPT API for summary generation.
-Implements custom Slack slash commands,
-interactive UI via Slack Block Kit, uses Java’s Regex for
-parsing free-form message text, and relies on Jackson
-for JSON payload handling. Timed operations are
-handled by Spring’s ThreadPoolTaskScheduler and CronTrigger. Tested core logic using JUnit framework & Mockito.
-PostgreSQL database with multi-tenant data isolation, accessed via Spring JDBC.
-Implementes an custom HTTP middleware for validating Slack request signature.
-Dockerized and deployed on Render, backed by a Neon-hosted multi-tenant PostgreSQL.
 
-
-## In this project, I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework, so I could dive deep into the underlying HTTP mechanics, REST controllers, middleware and many other important concepts with which I gained hands-on experience.
 
 # Core Funcullality: 
 
@@ -107,6 +91,27 @@ Dockerized and deployed on Render, backed by a Neon-hosted multi-tenant PostgreS
 ![new dash edit](https://github.com/user-attachments/assets/4e6c0e74-c935-43d9-82e8-cee5f4c3039a)
 
 ![generating](https://github.com/user-attachments/assets/880fa90b-3157-4f40-9cb2-83be0e4c8bc2)
+
+# Architecture
+
+The system I built follows an event-driven REST API architecture based on Spring MVC, focusing on modular design, multi-tenant support and clear separation of concerns. It uses Spring’s IoC and Dependency Injection to keep components lightweight, testable, and easy to extend. Each module is responsible for a specific part of the system: from handling Slack events to managing integrations, persistence, and background jobs, ensuring maintainability and scalability.
+
+## Core Components
+Controllers: Handeling incoming Slack events (slash commands, message events, and interactive actions). Each event runs in its own request-scoped context for isolation.
+Service Layer - Contains business logic for parsing messages, calling LLMs, managing scheduled tasks and DB interactions.
+
+## Integrations
+Slack - Wraps Slack Web API calls for posting messages and updating the Slack UI.
+LLMs backend - Ollama’s DeepSeek-R1:1.5B (local model) and OpenAI’s ChatGPT API, used for generating summaries and responses.
+Persistence - PostgreSQL database with multi-tenant isolation, accessed via Spring JDBC.
+Middleware - Custom HTTP layer that validates Slack request signatures before processing.
+Scheduler - Uses Spring’s TaskScheduler and CronTrigger for periodic jobs (like cleanup and automated summaries).
+
+## Infrastructure
+Deployment: Dockerized, Hosted on Render, connected to a PostgreSQL database hosted on Neon.
+Testing: Core logic tested with JUnit framework and Mockito.
+
+Educational Focus: I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework to gain hands-on experience with HTTP internals, middleware, and request lifecycle.
 
 
 
