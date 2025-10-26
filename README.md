@@ -97,19 +97,19 @@ Note: Because this application is hosted on Render’s free tier, you may experi
 The system I built follows an event-driven REST API architecture based on Spring MVC, focusing on modular design, multi-tenant support and clear separation of concerns. It uses Spring’s IoC and Dependency Injection to keep components lightweight, testable, and easy to extend. Each module is responsible for a specific part of the system: from handling Slack events to managing integrations, persistence, and background jobs, ensuring maintainability and scalability.
 
 ## Core Components
-Controllers: Handeling incoming Slack events (slash commands, message events, and interactive actions). Each event runs in its own request-scoped context for isolation.
-Service Layer - Contains business logic for parsing messages, calling LLMs, managing scheduled tasks and DB interactions.
+- Controllers: Handeling incoming Slack events (slash commands, message events, and interactive actions). Each event runs in its own request-scoped context for isolation.
+- Service Layer - Contains business logic for parsing messages, calling LLMs, managing scheduled tasks and DB interactions.
 
 ## Integrations
-Slack - Wraps Slack Web API calls for posting messages and updating the Slack UI.
-LLMs backend - Ollama’s DeepSeek-R1:1.5B (local model) and OpenAI’s ChatGPT API, used for generating summaries and responses.
-Persistence - PostgreSQL database with multi-tenant isolation, accessed via Spring JDBC.
-Middleware - Custom HTTP layer that validates Slack request signatures before processing.
+- Slack - Wraps Slack Web API calls for posting messages and updating the Slack UI.
+- LLMs backend - Ollama’s DeepSeek-R1:1.5B (local model) and OpenAI’s ChatGPT API, used for generating summaries and responses.
+- Persistence - PostgreSQL database with multi-tenant isolation, accessed via Spring JDBC.
+- Middleware - Custom HTTP layer that validates Slack request signatures before processing.
 Scheduler - Uses Spring’s TaskScheduler and CronTrigger for periodic jobs (like cleanup and automated summaries).
 
 ## Infrastructure
-Deployment: Dockerized, Hosted on Render, connected to a PostgreSQL database hosted on Neon.
-Testing: Core logic tested with JUnit framework and Mockito.
+- Deployment: Dockerized, Hosted on Render, connected to a PostgreSQL database hosted on Neon.
+- Testing: Core logic tested with JUnit framework and Mockito.
 
 Educational Focus: I deliberately chose to build my Slack integration with plain Spring MVC instead of using the Bolt framework to gain hands-on experience with HTTP internals, middleware, and request lifecycle.
 
