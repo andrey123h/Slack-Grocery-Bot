@@ -102,10 +102,10 @@ The system I built follows an event-driven REST API architecture based on Spring
 
 ## Integrations
 - Slack - Wraps Slack Web API calls for posting messages and updating the Slack UI.
-- LLMs backend - Ollama’s DeepSeek-R1:1.5B (local model) and OpenAI’s ChatGPT API, used for generating summaries and responses.
+- LLMs backend - Ollama’s DeepSeek-R1:1.5B (local model) and OpenAI’s API, used for generating summaries and responses.
 - Persistence - PostgreSQL database with multi-tenant isolation, accessed via Spring JDBC.
 - Middleware - Custom HTTP layer that validates Slack request signatures before processing.
-Scheduler - Uses Spring’s TaskScheduler and CronTrigger for periodic jobs (like cleanup and automated summaries).
+- Scheduler - Uses Spring’s TaskScheduler and CronTrigger for periodic jobs (like cleanup and automated summaries).
 
 ## Infrastructure
 - Deployment: Dockerized, Hosted on Render, connected to a PostgreSQL database hosted on Neon.
